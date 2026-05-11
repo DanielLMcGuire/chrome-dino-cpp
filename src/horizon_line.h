@@ -21,18 +21,9 @@ public:
     }
 
     void update(float deltaTime, float speed, bool night) {
-        float delta = std::floor(speed * FPS / 1000.0f * deltaTime);
-        xPos_[0] -= delta;
-        xPos_[1] -= delta;
-
-        if (xPos_[0] + SEG_WIDTH <= 0) {
-            xPos_[0] = xPos_[1] + SEG_WIDTH;
-            srcX_[0] = (randFloat() > 0.5f) ? SRC_X1 : SRC_X0;
-        }
-        if (xPos_[1] + SEG_WIDTH <= 0) {
-            xPos_[1] = xPos_[0] + SEG_WIDTH;
-            srcX_[1] = (randFloat() > 0.5f) ? SRC_X1 : SRC_X0;
-        }
+        float increment = std::floor(speed * (FPS / 1000.0f) * deltaTime);
+        int pos = xPos_[0] <= 0 ? 0 : 1;
+        updatexPos(pos, increment);
         draw(night);
     }
 
@@ -58,4 +49,20 @@ private:
     SDL_Texture*  spriteInv_;
     float xPos_[2] = {};
     int   srcX_[2] = {};
+
+    void updatexPos(int pos, float increment) {
+        int line1 = pos;
+        int line2 = pos == 0 ? 1 : 0;
+        xPos_[line1] -= increment;
+        xPos_[line2] = xPos_[line1] + SEG_WIDTH;
+        if (xPos_[line1] <= -(float)SEG_WIDTH) {
+            xPos_[line1] += SEG_WIDTH * 2;
+            xPos_[line2]  = xPos_[line1] - SEG_WIDTH;
+            srcX_[line1]  = getRandomType();
+        }
+    }
+
+    int getRandomType() const {
+        return randFloat() > 0.5f ? SRC_X0 + SEG_WIDTH : SRC_X0;
+    }
 };

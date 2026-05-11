@@ -132,7 +132,7 @@ void Trex::updateJump(float deltaTime) {
         reachedMinHeight_ = true;
     }
 
-    if (yPos < (float)(groundYPos_ - TREX_MAX_JUMP_HEIGHT) || speedDrop) {
+    if (yPos < (float)TREX_MAX_JUMP_HEIGHT || speedDrop) {
         endJump();
     }
 

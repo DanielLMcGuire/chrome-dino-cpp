@@ -26,7 +26,7 @@ public:
 
     void update(float speed, bool night) {
         if (remove) return;
-        xPos -= speed;
+        xPos -= std::ceil(speed);
         if (xPos + WIDTH < 0) remove = true;
         draw(night);
     }

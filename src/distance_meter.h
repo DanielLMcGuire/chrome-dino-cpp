@@ -90,7 +90,7 @@ public:
         }
 
         if (paint) {
-            for (int i = 0; i < (int)digits_.size(); ++i) {
+            for (int i = (int)digits_.size() - 1; i >= 0; --i) {
                 drawDigit(i, digits_[i] - '0', false, night);
             }
         }
@@ -138,7 +138,7 @@ private:
         if (highScore_.empty()) return;
         SDL_Texture* tex = night ? spriteInv_ : sprite_;
         SDL_SetTextureAlphaMod(tex, (Uint8)(255 * 0.8f));
-        for (int i = 0; i < (int)highScore_.size(); ++i) {
+        for (int i = (int)highScore_.size() - 1; i >= 0; --i) {
             char c = highScore_[i];
             int charPos = -1;
             if (c >= '0' && c <= '9') {
