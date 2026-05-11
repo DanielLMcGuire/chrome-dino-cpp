@@ -2,10 +2,10 @@
 
 ## Keybinds:
 
-Up = UP/SPACE
-Down = DOWN
-Restart = ENTER
-Exit = ESCAPE
+- Up = UP/SPACE
+- Down = DOWN
+- Restart = ENTER
+- Exit = ESCAPE
 
 ## Screenshot:
 
