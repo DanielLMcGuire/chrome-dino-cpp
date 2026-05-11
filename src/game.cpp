@@ -2,13 +2,13 @@
 #include <cmath>
 #include <algorithm>
 
-Game::Game(SDL_Renderer* renderer, SDL_Texture* sprite)
-    : renderer_(renderer), sprite_(sprite)
+Game::Game(SDL_Renderer* renderer, SDL_Texture* sprite, SDL_Texture* spriteInv)
+    : renderer_(renderer), sprite_(sprite), spriteInv_(spriteInv)
 {
-    trex_          = std::make_unique<Trex>(renderer_, sprite_);
-    horizon_       = std::make_unique<Horizon>(renderer_, sprite_);
-    distanceMeter_ = std::make_unique<DistanceMeter>(renderer_, sprite_);
-    gameOverPanel_ = std::make_unique<GameOverPanel>(renderer_, sprite_);
+    trex_          = std::make_unique<Trex>(renderer_, sprite_, spriteInv_);
+    horizon_       = std::make_unique<Horizon>(renderer_, sprite_, spriteInv_);
+    distanceMeter_ = std::make_unique<DistanceMeter>(renderer_, sprite_, spriteInv_);
+    gameOverPanel_ = std::make_unique<GameOverPanel>(renderer_, sprite_, spriteInv_);
 
     loadSounds();
     lastTime_ = SDL_GetTicks();
@@ -204,11 +204,11 @@ void Game::update() {
     clearCanvas();
 
     if (state_ == GameState::WAITING) {
-        horizon_->update(0.0f, currentSpeed_, false, false);
+        horizon_->update(0.0f, currentSpeed_, false, false, false);
         if (trex_->blinkCount < MAX_BLINK_COUNT) {
-            trex_->update(deltaTime);
+            trex_->update(deltaTime, TrexStatus(-1), false);
         }
-        distanceMeter_->update(deltaTime, 0);
+        distanceMeter_->update(deltaTime, 0, false);
 
     } else if (state_ == GameState::PLAYING) {
         runningTime_ += deltaTime;
@@ -219,8 +219,8 @@ void Game::update() {
         }
 
         bool showNight = inverted_;
-        horizon_->update(deltaTime, currentSpeed_, hasObstacles, showNight);
-        trex_->update(deltaTime);
+        horizon_->update(deltaTime, currentSpeed_, hasObstacles, showNight, showNight);
+        trex_->update(deltaTime, TrexStatus(-1), showNight);
 
         if (hasObstacles && checkCollision()) {
             gameOver();
@@ -232,7 +232,7 @@ void Game::update() {
         }
 
         bool playScore = distanceMeter_->update(deltaTime,
-                                                (int)std::ceil(distanceRan_));
+                                                (int)std::ceil(distanceRan_), showNight);
         if (playScore) {
             playSound(sndScore_);
         }
@@ -240,10 +240,10 @@ void Game::update() {
         handleNightMode(deltaTime);
 
     } else if (state_ == GameState::GAME_OVER) {
-        horizon_->update(0.0f, 0.0f, false, inverted_);
-        horizon_->draw();
-        trex_->update(0.0f);
-        distanceMeter_->update(0.0f, (int)std::ceil(distanceRan_));
-        gameOverPanel_->draw();
+        horizon_->update(0.0f, 0.0f, false, inverted_, inverted_);
+        horizon_->draw(inverted_);
+        trex_->update(0.0f, TrexStatus(-1), inverted_);
+        distanceMeter_->update(0.0f, (int)std::ceil(distanceRan_), inverted_);
+        gameOverPanel_->draw(inverted_);
     }
 }

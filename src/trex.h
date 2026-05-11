@@ -16,11 +16,11 @@ public:
 
     TrexStatus status = TrexStatus::WAITING;
 
-    Trex(SDL_Renderer* renderer, SDL_Texture* sprite);
+    Trex(SDL_Renderer* renderer, SDL_Texture* sprite, SDL_Texture* spriteInv);
 
-    void update(float deltaTime, TrexStatus newStatus = TrexStatus(-1));
+    void update(float deltaTime, TrexStatus newStatus = TrexStatus(-1), bool night = false);
     void updateJump(float deltaTime);
-    void draw() const;
+    void draw(bool night = false) const;
 
     void startJump(float speed);
     void endJump();
@@ -33,6 +33,7 @@ public:
 private:
     SDL_Renderer* renderer_;
     SDL_Texture*  sprite_;
+    SDL_Texture*  spriteInv_;
 
     struct FrameInfo { std::vector<int> frames; float msPerFrame; };
     static const FrameInfo ANIM_FRAMES[];
@@ -48,7 +49,7 @@ private:
     int   groundYPos_      = GROUND_Y;
     int   minJumpHeight_   = GROUND_Y - TREX_MIN_JUMP_HEIGHT;
 
-    void setBlinkDelay();
-    void blink(Uint32 now);
-    void drawFrame(int xOffset, int yOffset) const;
+    void  setBlinkDelay();
+    void  blink(Uint32 now, bool night);
+    void  drawFrame(int xOffset, int yOffset, bool night) const;
 };

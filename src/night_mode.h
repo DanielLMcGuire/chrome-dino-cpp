@@ -14,14 +14,14 @@ public:
 
     static constexpr int PHASES[7] = {140, 120, 100, 60, 40, 20, 0};
 
-    NightMode(SDL_Renderer* r, SDL_Texture* t)
-        : renderer_(r), sprite_(t)
+    NightMode(SDL_Renderer* r, SDL_Texture* t, SDL_Texture* ti)
+        : renderer_(r), sprite_(t), spriteInv_(ti)
     {
         xPos_ = (float)GAME_WIDTH;
         placeStars();
     }
 
-    void update(bool activated) {
+    void update(bool activated, bool night) {
         if (activated && opacity_ == 0.0f) {
             currentPhase_ = (currentPhase_ + 1) % 7;
         }
@@ -37,7 +37,7 @@ public:
             for (auto& s : stars_) {
                 s.x = updateX(s.x, STAR_SPEED);
             }
-            draw();
+            draw(night);
         } else {
             opacity_ = 0.0f;
             placeStars();
@@ -54,6 +54,7 @@ public:
 private:
     SDL_Renderer* renderer_;
     SDL_Texture*  sprite_;
+    SDL_Texture*  spriteInv_;
 
     float xPos_       = 0.0f;
     float yPos_       = 30.0f;
@@ -77,12 +78,13 @@ private:
         }
     }
 
-    void draw() const {
+    void draw(bool night) const {
+        SDL_Texture* tex = night ? spriteInv_ : sprite_;
         Uint8 alpha = (Uint8)(opacity_ * 255.0f);
-        SDL_SetTextureAlphaMod(sprite_, alpha);
+        SDL_SetTextureAlphaMod(tex, alpha);
 
         for (const auto& s : stars_) {
-            drawSprite(renderer_, sprite_,
+            drawSprite(renderer_, tex,
                        SP_STAR.x, s.srcY, STAR_SIZE, STAR_SIZE,
                        (int)s.x, (int)s.y);
         }
@@ -90,11 +92,11 @@ private:
         int phase     = PHASES[currentPhase_];
         int moonW     = (currentPhase_ == 3) ? WIDTH * 2 : WIDTH;
         int srcMoonX  = SP_MOON.x + phase;
-        drawSprite(renderer_, sprite_,
+        drawSprite(renderer_, tex,
                    srcMoonX, SP_MOON.y, moonW, HEIGHT,
                    (int)xPos_, (int)yPos_);
 
-        SDL_SetTextureAlphaMod(sprite_, 255);
+        SDL_SetTextureAlphaMod(tex, 255);
     }
 };
 

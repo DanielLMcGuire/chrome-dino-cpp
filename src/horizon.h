@@ -11,20 +11,20 @@ class Horizon {
 public:
     std::vector<std::unique_ptr<Obstacle>> obstacles;
 
-    Horizon(SDL_Renderer* r, SDL_Texture* t)
-        : renderer_(r), sprite_(t),
-          horizonLine_(r, t),
-          nightMode_(r, t)
+    Horizon(SDL_Renderer* r, SDL_Texture* t, SDL_Texture* ti)
+        : renderer_(r), sprite_(t), spriteInv_(ti),
+          horizonLine_(r, t, ti),
+          nightMode_(r, t, ti)
     {
         addCloud();
     }
 
-    void update(float deltaTime, float speed, bool updateObstacles, bool nightMode) {
-        horizonLine_.update(deltaTime, speed);
-        updateClouds(deltaTime, speed);
-        nightMode_.update(nightMode);
+    void update(float deltaTime, float speed, bool updateObstacles, bool nightMode, bool night) {
+        horizonLine_.update(deltaTime, speed, night);
+        updateClouds(deltaTime, speed, night);
+        nightMode_.update(nightMode, night);
         if (updateObstacles) {
-            updateObstacleList(deltaTime, speed);
+            updateObstacleList(deltaTime, speed, night);
         }
     }
 
@@ -40,15 +40,16 @@ public:
         if (!obstacles.empty()) obstacles.erase(obstacles.begin());
     }
 
-    void draw() const {
-        horizonLine_.draw();
+    void draw(bool night) const {
+        horizonLine_.draw(night);
         for (const auto& obs : obstacles)
-            obs->draw();
+            obs->draw(night);
     }
 
 private:
     SDL_Renderer* renderer_;
     SDL_Texture*  sprite_;
+    SDL_Texture*  spriteInv_;
 
     HorizonLine horizonLine_;
     NightMode   nightMode_;
@@ -60,13 +61,13 @@ private:
     std::string lastObstacleType_;
 
     void addCloud() {
-        clouds_.push_back(std::make_unique<Cloud>(renderer_, sprite_));
+        clouds_.push_back(std::make_unique<Cloud>(renderer_, sprite_, spriteInv_));
     }
 
-    void updateClouds(float deltaTime, float speed) {
+    void updateClouds(float deltaTime, float speed, bool night) {
         float cloudSpeed = cloudSpeed_ / 1000.0f * deltaTime * speed;
         for (auto& c : clouds_) {
-            c->update(cloudSpeed);
+            c->update(cloudSpeed, night);
         }
         clouds_.erase(std::remove_if(clouds_.begin(), clouds_.end(),
                        [](const auto& c) { return c->remove; }),
@@ -82,9 +83,9 @@ private:
         }
     }
 
-    void updateObstacleList(float deltaTime, float speed) {
+    void updateObstacleList(float deltaTime, float speed, bool night) {
         for (auto& obs : obstacles) {
-            obs->update(deltaTime, speed);
+            obs->update(deltaTime, speed, night);
         }
 
         obstacles.erase(
@@ -132,6 +133,6 @@ private:
 
         lastObstacleType_ = chosen->type;
         obstacles.push_back(
-            std::make_unique<Obstacle>(renderer_, sprite_, chosen, speed));
+            std::make_unique<Obstacle>(renderer_, sprite_, spriteInv_, chosen, speed));
     }
 };

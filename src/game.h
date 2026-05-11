@@ -12,7 +12,7 @@ enum class GameState { WAITING, PLAYING, GAME_OVER };
 
 class Game {
 public:
-    Game(SDL_Renderer* renderer, SDL_Texture* sprite);
+    Game(SDL_Renderer* renderer, SDL_Texture* sprite, SDL_Texture* spriteInv);
     ~Game();
 
     void handleEvent(const SDL_Event& e);
@@ -27,6 +27,7 @@ public:
 private:
     SDL_Renderer* renderer_;
     SDL_Texture*  sprite_;
+    SDL_Texture*  spriteInv_;
 
     std::unique_ptr<Trex>         trex_;
     std::unique_ptr<Horizon>      horizon_;

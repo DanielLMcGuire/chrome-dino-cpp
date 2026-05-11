@@ -21,8 +21,8 @@ static const std::vector<CollisionBox> COLL_DUCKING = {
     {1, 18, 55, 25},
 };
 
-Trex::Trex(SDL_Renderer* renderer, SDL_Texture* sprite)
-    : renderer_(renderer), sprite_(sprite)
+Trex::Trex(SDL_Renderer* renderer, SDL_Texture* sprite, SDL_Texture* spriteInv)
+    : renderer_(renderer), sprite_(sprite), spriteInv_(spriteInv)
 {
     setBlinkDelay();
     animStartTime_ = SDL_GetTicks();
@@ -33,7 +33,7 @@ void Trex::setBlinkDelay() {
     blinkDelay_ = 500.0f + randFloat() * 7000.0f;
 }
 
-void Trex::update(float deltaTime, TrexStatus newStatus) {
+void Trex::update(float deltaTime, TrexStatus newStatus, bool night) {
     animTimer_ += deltaTime;
 
     if (newStatus != TrexStatus(-1) && newStatus != status) {
@@ -47,10 +47,10 @@ void Trex::update(float deltaTime, TrexStatus newStatus) {
     }
 
     if (status == TrexStatus::WAITING) {
-        blink(SDL_GetTicks());
+        blink(SDL_GetTicks(), night);
     } else {
         const auto& fi = ANIM_FRAMES[(int)status];
-        drawFrame(fi.frames[currentFrame_], 0);
+        drawFrame(fi.frames[currentFrame_], 0, night);
     }
 
     frameTimer_ += deltaTime;
@@ -66,7 +66,8 @@ void Trex::update(float deltaTime, TrexStatus newStatus) {
     }
 }
 
-void Trex::drawFrame(int xOffset, int /*yOffset*/) const {
+void Trex::drawFrame(int xOffset, int /*yOffset*/, bool night) const {
+    SDL_Texture* tex = night ? spriteInv_ : sprite_;
     int srcW = (ducking && status != TrexStatus::CRASHED)
                    ? TREX_WIDTH_DUCK : TREX_WIDTH;
     int srcH = TREX_HEIGHT;
@@ -78,19 +79,19 @@ void Trex::drawFrame(int xOffset, int /*yOffset*/) const {
     int dstW = (ducking && status != TrexStatus::CRASHED) ? TREX_WIDTH_DUCK : TREX_WIDTH;
     int dstH = srcH;
 
-    drawSprite(renderer_, sprite_, srcX, srcY, srcW, srcH, dstX, dstY, dstW, dstH);
+    drawSprite(renderer_, tex, srcX, srcY, srcW, srcH, dstX, dstY, dstW, dstH);
 }
 
-void Trex::draw() const {
+void Trex::draw(bool night) const {
     const auto& fi = ANIM_FRAMES[(int)status];
-    drawFrame(fi.frames[currentFrame_], 0);
+    drawFrame(fi.frames[currentFrame_], 0, night);
 }
 
-void Trex::blink(Uint32 now) {
+void Trex::blink(Uint32 now, bool night) {
     float elapsed = (float)(now - animStartTime_);
     if (elapsed >= blinkDelay_) {
         const auto& fi = ANIM_FRAMES[(int)TrexStatus::WAITING];
-        drawFrame(fi.frames[currentFrame_], 0);
+        drawFrame(fi.frames[currentFrame_], 0, night);
         if (currentFrame_ == 1) {
             setBlinkDelay();
             animStartTime_ = now;

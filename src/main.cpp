@@ -68,19 +68,33 @@ int SDL_main(int /*argc*/, char* /*argv*/[]) {
     }
 
     SDL_Texture* sprite = SDL_CreateTextureFromSurface(renderer, surf);
-    SDL_FreeSurface(surf);
     if (!sprite) {
         std::cerr << "SDL_CreateTextureFromSurface error: " << SDL_GetError() << "\n";
+        SDL_FreeSurface(surf);
         SDL_DestroyRenderer(renderer);
         SDL_DestroyWindow(window);
         IMG_Quit();
         SDL_Quit();
         return 1;
     }
-
     SDL_SetTextureBlendMode(sprite, SDL_BLENDMODE_BLEND);
 
-    Game game(renderer, sprite);
+    SDL_Surface* surfInv = createInvertedSurface(surf);
+    SDL_FreeSurface(surf);
+    SDL_Texture* spriteInv = SDL_CreateTextureFromSurface(renderer, surfInv);
+    SDL_FreeSurface(surfInv);
+    if (!spriteInv) {
+        std::cerr << "SDL_CreateTextureFromSurface (inv) error: " << SDL_GetError() << "\n";
+        SDL_DestroyTexture(sprite);
+        SDL_DestroyRenderer(renderer);
+        SDL_DestroyWindow(window);
+        IMG_Quit();
+        SDL_Quit();
+        return 1;
+    }
+    SDL_SetTextureBlendMode(spriteInv, SDL_BLENDMODE_BLEND);
+
+    Game game(renderer, sprite, spriteInv);
 
     constexpr Uint32 FRAME_DELAY = 1000 / FPS;
     SDL_Event event;
@@ -101,6 +115,7 @@ int SDL_main(int /*argc*/, char* /*argv*/[]) {
         }
     }
 
+    SDL_DestroyTexture(spriteInv);
     SDL_DestroyTexture(sprite);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);

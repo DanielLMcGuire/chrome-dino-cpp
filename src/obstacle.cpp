@@ -64,9 +64,10 @@ static SpritePos spriteOrigin(const ObstacleTypeDef* t) {
 
 Obstacle::Obstacle(SDL_Renderer* renderer,
                    SDL_Texture* sprite,
+                   SDL_Texture* spriteInv,
                    const ObstacleTypeDef* type,
                    float currentSpeed)
-    : renderer_(renderer), sprite_(sprite), typeConfig(type)
+    : renderer_(renderer), sprite_(sprite), spriteInv_(spriteInv), typeConfig(type)
 {
     cloneCollisionBoxes();
     xPos = (float)GAME_WIDTH;
@@ -111,7 +112,8 @@ float Obstacle::getGap(float speed) const {
     return (float)randInt((int)minGap, (int)maxGap);
 }
 
-void Obstacle::draw() const {
+void Obstacle::draw(bool night) const {
+    SDL_Texture* tex = night ? spriteInv_ : sprite_;
     SpritePos orig = spriteOrigin(typeConfig);
     int sw = typeConfig->width;
     int sh = typeConfig->height;
@@ -127,12 +129,12 @@ void Obstacle::draw() const {
     int dstW = typeConfig->width * size;
     int dstH = typeConfig->height;
 
-    drawSprite(renderer_, sprite_,
+    drawSprite(renderer_, tex,
                srcX, srcY, sw * size, sh,
                (int)xPos, (int)yPos, dstW, dstH);
 }
 
-void Obstacle::update(float deltaTime, float speed) {
+void Obstacle::update(float deltaTime, float speed, bool night) {
     if (remove) return;
 
     float effectiveSpeed = speed + speedOffset_;
@@ -146,7 +148,7 @@ void Obstacle::update(float deltaTime, float speed) {
         }
     }
 
-    draw();
+    draw(night);
 
     if (!isVisible()) {
         remove = true;

@@ -15,24 +15,24 @@ public:
     float gap   = 0.0f;
     bool  remove = false;
 
-    Cloud(SDL_Renderer* r, SDL_Texture* t)
-        : renderer_(r), sprite_(t)
+    Cloud(SDL_Renderer* r, SDL_Texture* t, SDL_Texture* ti)
+        : renderer_(r), sprite_(t), spriteInv_(ti)
     {
         xPos = (float)GAME_WIDTH;
         yPos = (float)randInt(MIN_SKY, MAX_SKY);
         gap  = (float)randInt(MIN_GAP, MAX_GAP);
-        draw();
+        draw(false);
     }
 
-    void update(float speed) {
+    void update(float speed, bool night) {
         if (remove) return;
         xPos -= speed;
         if (xPos + WIDTH < 0) remove = true;
-        draw();
+        draw(night);
     }
 
-    void draw() const {
-        drawSprite(renderer_, sprite_,
+    void draw(bool night) const {
+        drawSprite(renderer_, night ? spriteInv_ : sprite_,
                    SP_CLOUD.x, SP_CLOUD.y, WIDTH, HEIGHT,
                    (int)xPos, (int)yPos);
     }
@@ -40,4 +40,5 @@ public:
 private:
     SDL_Renderer* renderer_;
     SDL_Texture*  sprite_;
+    SDL_Texture*  spriteInv_;
 };

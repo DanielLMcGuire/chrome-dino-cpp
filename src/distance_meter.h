@@ -16,8 +16,8 @@ public:
 
     bool achievement = false;
 
-    DistanceMeter(SDL_Renderer* r, SDL_Texture* t)
-        : renderer_(r), sprite_(t)
+    DistanceMeter(SDL_Renderer* r, SDL_Texture* t, SDL_Texture* ti)
+        : renderer_(r), sprite_(t), spriteInv_(ti)
     {
         maxUnits_ = MAX_UNITS;
         maxScore_ = maxUnits_;
@@ -47,7 +47,7 @@ public:
         return distance > 0 ? (int)std::round(distance * COEFFICIENT) : 0;
     }
 
-    bool update(float deltaTime, int distance) {
+    bool update(float deltaTime, int distance, bool night) {
         bool playSound = false;
         bool paint     = true;
 
@@ -91,16 +91,17 @@ public:
 
         if (paint) {
             for (int i = 0; i < (int)digits_.size(); ++i) {
-                drawDigit(i, digits_[i] - '0', false);
+                drawDigit(i, digits_[i] - '0', false, night);
             }
         }
-        drawHighScore();
+        drawHighScore(night);
         return playSound;
     }
 
 private:
     SDL_Renderer* renderer_;
     SDL_Texture*  sprite_;
+    SDL_Texture*  spriteInv_;
 
     int   x_               = 0;
     int   y_               = 5;
@@ -117,7 +118,8 @@ private:
         x_ = GAME_WIDTH - DEST_WIDTH * (maxUnits_ + 1);
     }
 
-    void drawDigit(int digitPos, int charPos, bool isHighScore) const {
+    void drawDigit(int digitPos, int charPos, bool isHighScore, bool night) const {
+        SDL_Texture* tex = night ? spriteInv_ : sprite_;
         int srcX = SP_TEXT.x + CHAR_WIDTH * charPos;
         int srcY = SP_TEXT.y;
 
@@ -127,15 +129,15 @@ private:
         int dstX = baseX + digitPos * DEST_WIDTH;
         int dstY = y_;
 
-        drawSprite(renderer_, sprite_,
+        drawSprite(renderer_, tex,
                    srcX, srcY, CHAR_WIDTH, CHAR_HEIGHT,
                    dstX, dstY);
     }
 
-    void drawHighScore() const {
+    void drawHighScore(bool night) const {
         if (highScore_.empty()) return;
-
-        SDL_SetTextureAlphaMod(sprite_, (Uint8)(255 * 0.8f));
+        SDL_Texture* tex = night ? spriteInv_ : sprite_;
+        SDL_SetTextureAlphaMod(tex, (Uint8)(255 * 0.8f));
         for (int i = 0; i < (int)highScore_.size(); ++i) {
             char c = highScore_[i];
             int charPos = -1;
@@ -147,9 +149,9 @@ private:
                 charPos = 11;
             }
             if (charPos >= 0) {
-                drawDigit(i, charPos, true);
+                drawDigit(i, charPos, true, night);
             }
         }
-        SDL_SetTextureAlphaMod(sprite_, 255);
+        SDL_SetTextureAlphaMod(tex, 255);
     }
 };
