@@ -35,6 +35,29 @@ void Game::handleEvent(const SDL_Event& e) {
         running_ = false;
         return;
     }
+    if (e.type == SDL_MOUSEBUTTONDOWN && e.button.button == SDL_BUTTON_LEFT) {
+        if (state_ == GameState::WAITING || state_ == GameState::PLAYING) {
+            if (!keyJump_) {
+                keyJump_ = true;
+                if (state_ == GameState::WAITING) {
+                    startGame();
+                }
+                if (!trex_->jumping && !trex_->ducking) {
+                    playSound(sndPress_);
+                    trex_->startJump(currentSpeed_);
+                }
+            }
+        } else if (state_ == GameState::GAME_OVER) {
+            Uint32 elapsed = SDL_GetTicks() - crashTime_;
+            if (elapsed >= GAMEOVER_CLEAR_TIME) {
+                restart();
+            }
+        }
+    }
+    if (e.type == SDL_MOUSEBUTTONUP && e.button.button == SDL_BUTTON_LEFT) {
+        keyJump_ = false;
+        trex_->endJump();
+    }
     if (e.type == SDL_KEYDOWN) {
         switch (e.key.keysym.sym) {
             case SDLK_ESCAPE:
