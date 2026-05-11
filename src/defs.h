@@ -11,8 +11,8 @@ constexpr int GAME_HEIGHT = 150;
 extern int WINDOW_WIDTH;
 extern int WINDOW_HEIGHT;
 
-constexpr int   FPS            = 60;
-constexpr float MS_PER_FRAME   = 1000.0f / FPS;
+constexpr int   FPS            = 60; // Fallback
+extern float MS_PER_FRAME;
 
 constexpr float INITIAL_SPEED       = 6.0f;
 constexpr float MAX_SPEED           = 13.0f;

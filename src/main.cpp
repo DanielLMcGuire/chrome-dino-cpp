@@ -8,8 +8,9 @@
 #include "defs.h"
 #include "game.h"
 
-int WINDOW_WIDTH  = GAME_WIDTH  * 2;
-int WINDOW_HEIGHT = GAME_HEIGHT * 2;
+int   WINDOW_WIDTH  = GAME_WIDTH  * 2;
+int   WINDOW_HEIGHT = GAME_HEIGHT * 2;
+float MS_PER_FRAME  = 1000.0f / FPS;
 
 int SDL_main(int /*argc*/, char* /*argv*/[]) {
     std::srand((unsigned)std::time(nullptr));
@@ -55,6 +56,12 @@ int SDL_main(int /*argc*/, char* /*argv*/[]) {
         IMG_Quit();
         SDL_Quit();
         return 1;
+    }
+
+    int displayIndex = SDL_GetWindowDisplayIndex(window);
+    SDL_DisplayMode mode;
+    if (SDL_GetCurrentDisplayMode(displayIndex, &mode) == 0 && mode.refresh_rate > 0) {
+        MS_PER_FRAME = 1000.0f / (float)mode.refresh_rate;
     }
 
     int drawW = 0, drawH = 0;
@@ -106,23 +113,15 @@ int SDL_main(int /*argc*/, char* /*argv*/[]) {
 
     Game game(renderer, sprite, spriteInv);
 
-    constexpr Uint32 FRAME_DELAY = 1000 / FPS;
     SDL_Event event;
 
     while (game.isRunning()) {
-        Uint32 frameStart = SDL_GetTicks();
-
         while (SDL_PollEvent(&event)) {
             game.handleEvent(event);
         }
 
         game.update();
-        SDL_RenderPresent(renderer);
-
-        Uint32 elapsed = SDL_GetTicks() - frameStart;
-        if (elapsed < FRAME_DELAY) {
-            SDL_Delay(FRAME_DELAY - elapsed);
-        }
+        SDL_RenderPresent(renderer);  // blocks at display refresh rate via vsync
     }
 
     SDL_DestroyTexture(spriteInv);
