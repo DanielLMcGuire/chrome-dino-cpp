@@ -2,7 +2,7 @@
 #include <cmath>
 
 const Trex::FrameInfo Trex::ANIM_FRAMES[] = {
-    /* WAITING  */ {{ 44,   0}, 1000.0f / 3.0f},
+    /* WAITING  */ {{  0,  44}, 1000.0f / 3.0f},
     /* RUNNING  */ {{ 88, 132}, 1000.0f / 12.0f},
     /* JUMPING  */ {{  0     }, 1000.0f / 60.0f},
     /* DUCKING  */ {{264, 323}, 1000.0f / 8.0f},
@@ -30,7 +30,7 @@ Trex::Trex(SDL_Renderer* renderer, SDL_Texture* sprite, SDL_Texture* spriteInv)
 }
 
 void Trex::setBlinkDelay() {
-    blinkDelay_ = 500.0f + randFloat() * 7000.0f;
+    blinkDelay_ = std::ceil(randFloat() * 7000.0f);
 }
 
 void Trex::update(float deltaTime, TrexStatus newStatus, bool night) {
@@ -47,17 +47,16 @@ void Trex::update(float deltaTime, TrexStatus newStatus, bool night) {
     }
 
     if (status == TrexStatus::WAITING) {
-        blink(SDL_GetTicks(), night);
+        blink(SDL_GetTicks(), deltaTime, night);
     } else {
         const auto& fi = ANIM_FRAMES[(int)status];
         drawFrame(fi.frames[currentFrame_], 0, night);
-    }
 
-    frameTimer_ += deltaTime;
-    const auto& fi = ANIM_FRAMES[(int)status];
-    if (frameTimer_ >= fi.msPerFrame) {
-        frameTimer_ = 0.0f;
-        currentFrame_ = (currentFrame_ + 1) % (int)fi.frames.size();
+        frameTimer_ += deltaTime;
+        if (frameTimer_ >= fi.msPerFrame) {
+            frameTimer_ = 0.0f;
+            currentFrame_ = (currentFrame_ + 1) % (int)fi.frames.size();
+        }
     }
 
     if (speedDrop && (int)yPos == groundYPos_) {
@@ -87,16 +86,24 @@ void Trex::draw(bool night) const {
     drawFrame(fi.frames[currentFrame_], 0, night);
 }
 
-void Trex::blink(Uint32 now, bool night) {
+void Trex::blink(Uint32 now, float deltaTime, bool night) {
     float elapsed = (float)(now - animStartTime_);
-    if (elapsed >= blinkDelay_) {
-        const auto& fi = ANIM_FRAMES[(int)TrexStatus::WAITING];
-        drawFrame(fi.frames[currentFrame_], 0, night);
-        if (currentFrame_ == 1) {
-            setBlinkDelay();
-            animStartTime_ = now;
-            ++blinkCount;
+    if (elapsed >= blinkDelay_ && blinkCount < MAX_BLINK_COUNT) {
+        frameTimer_ += deltaTime;
+        if (frameTimer_ >= ANIM_FRAMES[(int)TrexStatus::WAITING].msPerFrame) {
+            frameTimer_ = 0.0f;
+            currentFrame_ = (currentFrame_ + 1) % 2;
+            if (currentFrame_ == 0) {
+                setBlinkDelay();
+                animStartTime_ = now;
+                ++blinkCount;
+            }
         }
+        drawFrame(ANIM_FRAMES[(int)TrexStatus::WAITING].frames[currentFrame_], 0, night);
+    } else {
+        currentFrame_ = 0;
+        frameTimer_   = 0.0f;
+        drawFrame(ANIM_FRAMES[(int)TrexStatus::WAITING].frames[0], 0, night);
     }
 }
 

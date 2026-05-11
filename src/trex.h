@@ -50,6 +50,6 @@ private:
     int   minJumpHeight_   = GROUND_Y - TREX_MIN_JUMP_HEIGHT;
 
     void  setBlinkDelay();
-    void  blink(Uint32 now, bool night);
+    void  blink(Uint32 now, float deltaTime, bool night);
     void  drawFrame(int xOffset, int yOffset, bool night) const;
 };

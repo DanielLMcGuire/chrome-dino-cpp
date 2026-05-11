@@ -228,9 +228,7 @@ void Game::update() {
 
     if (state_ == GameState::WAITING) {
         horizon_->update(0.0f, currentSpeed_, false, false, false);
-        if (trex_->blinkCount < MAX_BLINK_COUNT) {
-            trex_->update(deltaTime, TrexStatus(-1), false);
-        }
+        trex_->update(deltaTime, TrexStatus(-1), false);
         distanceMeter_->update(deltaTime, 0, false);
 
     } else if (state_ == GameState::PLAYING) {
