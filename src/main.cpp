@@ -8,6 +8,9 @@
 #include "defs.h"
 #include "game.h"
 
+int WINDOW_WIDTH  = GAME_WIDTH  * 2;
+int WINDOW_HEIGHT = GAME_HEIGHT * 2;
+
 int SDL_main(int /*argc*/, char* /*argv*/[]) {
     std::srand((unsigned)std::time(nullptr));
 
@@ -33,7 +36,7 @@ int SDL_main(int /*argc*/, char* /*argv*/[]) {
         "Chromium Dino Game",
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
         WINDOW_WIDTH, WINDOW_HEIGHT,
-        SDL_WINDOW_SHOWN
+        SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI
     );
     if (!window) {
         std::cerr << "SDL_CreateWindow error: " << SDL_GetError() << "\n";
@@ -54,10 +57,17 @@ int SDL_main(int /*argc*/, char* /*argv*/[]) {
         return 1;
     }
 
-    SDL_RenderSetLogicalSize(renderer, WINDOW_WIDTH, WINDOW_HEIGHT);
+    int drawW = 0, drawH = 0;
+    SDL_GetRendererOutputSize(renderer, &drawW, &drawH);
+    IS_HIDPI = (drawW > WINDOW_WIDTH);
 
-    SDL_Surface* surf = IMG_Load(
-        "resources/images/default_100_percent/offline/100-offline-sprite.png");
+    SDL_RenderSetLogicalSize(renderer, GAME_WIDTH, GAME_HEIGHT);
+
+    const char* spritePath = IS_HIDPI
+        ? "resources/images/default_200_percent/offline/200-offline-sprite.png"
+        : "resources/images/default_100_percent/offline/100-offline-sprite.png";
+
+    SDL_Surface* surf = IMG_Load(spritePath);
     if (!surf) {
         std::cerr << "IMG_Load error: " << IMG_GetError() << "\n";
         SDL_DestroyRenderer(renderer);

@@ -8,9 +8,8 @@
 
 constexpr int GAME_WIDTH  = 600;
 constexpr int GAME_HEIGHT = 150;
-constexpr int SCALE       = 2;
-constexpr int WINDOW_WIDTH  = GAME_WIDTH  * SCALE;
-constexpr int WINDOW_HEIGHT = GAME_HEIGHT * SCALE;
+extern int WINDOW_WIDTH;
+extern int WINDOW_HEIGHT;
 
 constexpr int   FPS            = 60;
 constexpr float MS_PER_FRAME   = 1000.0f / FPS;
@@ -100,6 +99,8 @@ inline int randInt(int lo, int hi) {
     return lo + std::rand() % (hi - lo + 1);
 }
 
+inline bool IS_HIDPI = false;
+
 inline void drawSprite(SDL_Renderer* r, SDL_Texture* t,
                        int sx, int sy, int sw, int sh,
                        int dx, int dy,
@@ -107,12 +108,15 @@ inline void drawSprite(SDL_Renderer* r, SDL_Texture* t,
                        double angle = 0.0,
                        SDL_RendererFlip flip = SDL_FLIP_NONE)
 {
+    if (IS_HIDPI) {
+        sx *= 2; sy *= 2; sw *= 2; sh *= 2;
+    }
     SDL_Rect src = { sx, sy, sw, sh };
     SDL_Rect dst = {
-        dx * SCALE,
-        dy * SCALE,
-        (dw < 0 ? sw : dw) * SCALE,
-        (dh < 0 ? sh : dh) * SCALE
+        dx,
+        dy,
+        (dw < 0 ? sw / (IS_HIDPI ? 2 : 1) : dw),
+        (dh < 0 ? sh / (IS_HIDPI ? 2 : 1) : dh)
     };
     if (angle != 0.0 || flip != SDL_FLIP_NONE)
         SDL_RenderCopyEx(r, t, &src, &dst, angle, nullptr, flip);
