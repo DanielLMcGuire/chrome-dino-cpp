@@ -244,6 +244,6 @@ void Game::update() {
         horizon_->draw(inverted_);
         trex_->update(0.0f, TrexStatus(-1), inverted_);
         distanceMeter_->update(0.0f, (int)std::ceil(distanceRan_), inverted_);
-        gameOverPanel_->draw(inverted_);
+        gameOverPanel_->update(deltaTime, inverted_);
     }
 }
