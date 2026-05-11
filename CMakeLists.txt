@@ -4,6 +4,13 @@ project(DinoGame CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+set(SDL_SHARED OFF CACHE BOOL "" FORCE)
+set(SDL_STATIC ON CACHE BOOL "" FORCE)
+
+set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+set(SDL2IMAGE_DEPS_SHARED OFF CACHE BOOL "" FORCE)
+set(SDL2MIXER_DEPS_SHARED OFF CACHE BOOL "" FORCE)
+
 set(SDL2IMAGE_AVIF OFF CACHE BOOL "" FORCE)
 set(SDL2IMAGE_WEBP OFF CACHE BOOL "" FORCE)
 set(SDL2IMAGE_TIF OFF CACHE BOOL "" FORCE)
@@ -36,16 +43,23 @@ FetchContent_Declare(
     GIT_TAG release-2.8.0
 )
 
-
 FetchContent_MakeAvailable(SDL2 SDL2_image SDL2_mixer)
 
 file(GLOB_RECURSE ALL_SOURCES "src/*.cpp")
-
 add_executable(DinoGame ${ALL_SOURCES})
 
 target_link_libraries(DinoGame PRIVATE
-    SDL2::SDL2 SDL2_image::SDL2_image SDL2_mixer::SDL2_mixer)
-target_compile_definitions(DinoGame PRIVATE SDL_MAIN_HANDLED)
+    SDL2::SDL2-static
+    SDL2_image::SDL2_image-static
+    SDL2_mixer::SDL2_mixer-static
+    SDL2::SDL2main
+)
+
+if (WIN32)
+    set_target_properties(DinoGame PROPERTIES
+        WIN32_EXECUTABLE TRUE
+    )
+endif()
 
 add_custom_command(TARGET DinoGame POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory

@@ -8,7 +8,7 @@
 #include "defs.h"
 #include "game.h"
 
-int main(int /*argc*/, char* /*argv*/[]) {
+int SDL_main(int /*argc*/, char* /*argv*/[]) {
     std::srand((unsigned)std::time(nullptr));
 
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0) {
@@ -30,7 +30,7 @@ int main(int /*argc*/, char* /*argv*/[]) {
     Mix_Init(MIX_INIT_MP3);
 
     SDL_Window* window = SDL_CreateWindow(
-        "Chrome Dino",
+        "Chromium Dino Game",
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
         WINDOW_WIDTH, WINDOW_HEIGHT,
         SDL_WINDOW_SHOWN
