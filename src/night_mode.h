@@ -17,7 +17,6 @@ public:
     NightMode(SDL_Renderer* r, SDL_Texture* t, SDL_Texture* ti)
         : renderer_(r), sprite_(t), spriteInv_(ti)
     {
-        xPos_ = (float)GAME_WIDTH;
         placeStars();
     }
 
@@ -26,9 +25,9 @@ public:
             currentPhase_ = (currentPhase_ + 1) % 7;
         }
 
-        if (activated && opacity_ < 1.0f) {
+        if (activated && (opacity_ < 1.0f || opacity_ == 0.0f)) {
             opacity_ = std::min(1.0f, opacity_ + FADE_SPEED);
-        } else if (!activated && opacity_ > 0.0f) {
+        } else if (opacity_ > 0.0f) {
             opacity_ = std::max(0.0f, opacity_ - FADE_SPEED);
         }
 
@@ -50,9 +49,7 @@ public:
     void reset() {
         currentPhase_ = 0;
         opacity_      = 0.0f;
-        drawStars_    = false;
-        xPos_         = (float)GAME_WIDTH;
-        placeStars();
+        update(false, false);
     }
 
 private:
@@ -92,7 +89,7 @@ private:
             for (const auto& s : stars_) {
                 drawSprite(renderer_, tex,
                            SP_STAR.x, s.srcY, STAR_SIZE, STAR_SIZE,
-                           (int)s.x, (int)s.y);
+                           (int)std::round(s.x), (int)s.y);
             }
         }
 
@@ -101,7 +98,7 @@ private:
         int srcMoonX  = SP_MOON.x + phase;
         drawSprite(renderer_, tex,
                    srcMoonX, SP_MOON.y, moonW, HEIGHT,
-                   (int)xPos_, (int)yPos_);
+                   (int)std::round(xPos_), (int)yPos_);
 
         SDL_SetTextureAlphaMod(tex, 255);
     }
