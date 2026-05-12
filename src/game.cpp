@@ -49,8 +49,6 @@ void Game::playSound(Mix_Chunk* chunk) {
 void Game::pollGamepad() {
     if (!gamepad_) return;
 
-    // Button indices match the W3C standard gamepad mapping used by the original:
-    // 0=A(jump), 1=B(duck), 9=Start(restart)
     constexpr int BTN_JUMP    = 0;
     constexpr int BTN_DUCK    = 1;
     constexpr int BTN_RESTART = 9;
@@ -63,7 +61,6 @@ void Game::pollGamepad() {
     auto rising  = [&](int idx) { return  pressed(idx) && !padPrev_[idx]; };
     auto falling = [&](int idx) { return !pressed(idx) &&  padPrev_[idx]; };
 
-    // Jump (rising edge)
     if (rising(BTN_JUMP)) {
         if (state_ == GameState::WAITING || state_ == GameState::PLAYING) {
             if (!keyJump_) {
@@ -78,13 +75,11 @@ void Game::pollGamepad() {
             if (SDL_GetTicks() - crashTime_ >= GAMEOVER_CLEAR_TIME) restart();
         }
     }
-    // Jump (falling edge)
     if (falling(BTN_JUMP)) {
         keyJump_ = false;
         trex_->endJump();
     }
 
-    // Duck (rising edge)
     if (rising(BTN_DUCK)) {
         if (!keyDuck_ && state_ == GameState::PLAYING) {
             keyDuck_ = true;
@@ -92,14 +87,13 @@ void Game::pollGamepad() {
             else if (!trex_->jumping && !trex_->ducking) trex_->setDuck(true);
         }
     }
-    // Duck (falling edge)
+
     if (falling(BTN_DUCK)) {
         keyDuck_         = false;
         trex_->speedDrop = false;
         trex_->setDuck(false);
     }
 
-    // Restart (rising edge)
     if (rising(BTN_RESTART) && state_ == GameState::GAME_OVER) restart();
 
     for (int i = 0; i < (int)padPrev_.size(); ++i)
