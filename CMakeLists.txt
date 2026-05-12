@@ -55,6 +55,52 @@ target_link_libraries(DinoGame PRIVATE
     SDL2::SDL2main
 )
 
+if(MSVC)
+    target_compile_options(DinoGame PRIVATE
+        $<$<CONFIG:Release,RelWithDebInfo>:
+            /O2
+            /GL
+            /Gy
+            /fp:fast
+        >
+    )
+    target_link_options(DinoGame PRIVATE
+        $<$<CONFIG:Release,RelWithDebInfo>:
+            /LTCG
+        >
+    )
+elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    target_compile_options(DinoGame PRIVATE
+        $<$<CONFIG:Release,RelWithDebInfo>:
+            -O3
+            -march=native
+            -funroll-loops
+            -ffast-math
+            -flto=thin
+        >
+    )
+    target_link_options(DinoGame PRIVATE
+        $<$<CONFIG:Release,RelWithDebInfo>:
+            -flto=thin
+        >
+    )
+elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+    target_compile_options(DinoGame PRIVATE
+        $<$<CONFIG:Release,RelWithDebInfo>:
+            -O3
+            -march=native
+            -funroll-loops
+            -ffast-math
+            -flto
+        >
+    )
+    target_link_options(DinoGame PRIVATE
+        $<$<CONFIG:Release,RelWithDebInfo>:
+            -flto
+        >
+    )
+endif()
+
 if (WIN32)
     set_target_properties(DinoGame PROPERTIES
         WIN32_EXECUTABLE TRUE
