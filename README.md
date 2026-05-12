@@ -10,6 +10,7 @@
 ## Missing features from the original (no plan to implement)
 
 - System for seasonal themes
+- Accessibility features (e.g. synthesized obstacle warning, slow game mode)
 
 ## Screenshots
 
