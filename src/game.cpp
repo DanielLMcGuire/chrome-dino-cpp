@@ -1,6 +1,7 @@
 #include "game.h"
 #include <cmath>
 #include <algorithm>
+#include <fstream>
 
 Game::Game(SDL_Renderer* renderer, SDL_Texture* sprite, SDL_Texture* spriteInv)
     : renderer_(renderer), sprite_(sprite), spriteInv_(spriteInv)
@@ -11,6 +12,7 @@ Game::Game(SDL_Renderer* renderer, SDL_Texture* sprite, SDL_Texture* spriteInv)
     gameOverPanel_ = std::make_unique<GameOverPanel>(renderer_, sprite_, spriteInv_);
 
     loadSounds();
+    loadHighScore();
     lastTime_ = SDL_GetTicks();
 }
 
@@ -18,6 +20,7 @@ Game::~Game() {
     if (sndHit_)   Mix_FreeChunk(sndHit_);
     if (sndPress_) Mix_FreeChunk(sndPress_);
     if (sndScore_) Mix_FreeChunk(sndScore_);
+    if (gamepad_)  SDL_GameControllerClose(gamepad_);
 }
 
 void Game::loadSounds() {
@@ -26,8 +29,81 @@ void Game::loadSounds() {
     sndScore_ = Mix_LoadWAV("resources/sounds/score-reached.mp3");
 }
 
+void Game::loadHighScore() {
+    std::ifstream f("highscore.dat", std::ios::binary);
+    if (!f) return;
+    f.read(reinterpret_cast<char*>(&highestScore_), sizeof(highestScore_));
+    if (f && highestScore_ > 0)
+        distanceMeter_->setHighScore(highestScore_);
+}
+
+void Game::saveHighScore() {
+    std::ofstream f("highscore.dat", std::ios::binary | std::ios::trunc);
+    f.write(reinterpret_cast<const char*>(&highestScore_), sizeof(highestScore_));
+}
+
 void Game::playSound(Mix_Chunk* chunk) {
     if (chunk) Mix_PlayChannel(-1, chunk, 0);
+}
+
+void Game::pollGamepad() {
+    if (!gamepad_) return;
+
+    // Button indices match the W3C standard gamepad mapping used by the original:
+    // 0=A(jump), 1=B(duck), 9=Start(restart)
+    constexpr int BTN_JUMP    = 0;
+    constexpr int BTN_DUCK    = 1;
+    constexpr int BTN_RESTART = 9;
+
+    auto pressed = [&](int idx) -> bool {
+        return SDL_GameControllerGetButton(gamepad_,
+            static_cast<SDL_GameControllerButton>(idx)) != 0;
+    };
+
+    auto rising  = [&](int idx) { return  pressed(idx) && !padPrev_[idx]; };
+    auto falling = [&](int idx) { return !pressed(idx) &&  padPrev_[idx]; };
+
+    // Jump (rising edge)
+    if (rising(BTN_JUMP)) {
+        if (state_ == GameState::WAITING || state_ == GameState::PLAYING) {
+            if (!keyJump_) {
+                keyJump_ = true;
+                if (state_ == GameState::WAITING) startGame();
+                if (!trex_->jumping && !trex_->ducking) {
+                    playSound(sndPress_);
+                    trex_->startJump(currentSpeed_);
+                }
+            }
+        } else if (state_ == GameState::GAME_OVER) {
+            if (SDL_GetTicks() - crashTime_ >= GAMEOVER_CLEAR_TIME) restart();
+        }
+    }
+    // Jump (falling edge)
+    if (falling(BTN_JUMP)) {
+        keyJump_ = false;
+        trex_->endJump();
+    }
+
+    // Duck (rising edge)
+    if (rising(BTN_DUCK)) {
+        if (!keyDuck_ && state_ == GameState::PLAYING) {
+            keyDuck_ = true;
+            if (trex_->jumping)                          trex_->setSpeedDrop();
+            else if (!trex_->jumping && !trex_->ducking) trex_->setDuck(true);
+        }
+    }
+    // Duck (falling edge)
+    if (falling(BTN_DUCK)) {
+        keyDuck_         = false;
+        trex_->speedDrop = false;
+        trex_->setDuck(false);
+    }
+
+    // Restart (rising edge)
+    if (rising(BTN_RESTART) && state_ == GameState::GAME_OVER) restart();
+
+    for (int i = 0; i < (int)padPrev_.size(); ++i)
+        padPrev_[i] = pressed(i);
 }
 
 void Game::handleEvent(const SDL_Event& e) {
@@ -35,28 +111,53 @@ void Game::handleEvent(const SDL_Event& e) {
         running_ = false;
         return;
     }
+    if (e.type == SDL_CONTROLLERDEVICEADDED && !gamepad_) {
+        gamepad_ = SDL_GameControllerOpen(e.cdevice.which);
+    }
+    if (e.type == SDL_CONTROLLERDEVICEREMOVED && gamepad_) {
+        if (SDL_GameControllerFromInstanceID(e.cdevice.which) == gamepad_) {
+            SDL_GameControllerClose(gamepad_);
+            gamepad_ = nullptr;
+        }
+    }
     if (e.type == SDL_MOUSEBUTTONDOWN && e.button.button == SDL_BUTTON_LEFT) {
         if (state_ == GameState::WAITING || state_ == GameState::PLAYING) {
             if (!keyJump_) {
                 keyJump_ = true;
-                if (state_ == GameState::WAITING) {
-                    startGame();
-                }
+                if (state_ == GameState::WAITING) startGame();
                 if (!trex_->jumping && !trex_->ducking) {
                     playSound(sndPress_);
                     trex_->startJump(currentSpeed_);
                 }
-            }
-        } else if (state_ == GameState::GAME_OVER) {
-            Uint32 elapsed = SDL_GetTicks() - crashTime_;
-            if (elapsed >= GAMEOVER_CLEAR_TIME) {
-                restart();
             }
         }
     }
     if (e.type == SDL_MOUSEBUTTONUP && e.button.button == SDL_BUTTON_LEFT) {
         keyJump_ = false;
         trex_->endJump();
+        if (state_ == GameState::GAME_OVER) {
+            Uint32 elapsed = SDL_GetTicks() - crashTime_;
+            if (elapsed >= GAMEOVER_CLEAR_TIME) {
+                int lx = e.button.x;
+                int ly = e.button.y;
+                SDL_Rect r = distanceMeter_->getHighScoreRect();
+                bool onHiScore = highestScore_ > 0 &&
+                                 lx >= r.x && lx < r.x + r.w &&
+                                 ly >= r.y && ly < r.y + r.h;
+                if (onHiScore) {
+                    if (distanceMeter_->isHighScoreFlashing()) {
+                        highestScore_ = 0;
+                        saveHighScore();
+                        distanceMeter_->resetHighScore();
+                    } else {
+                        distanceMeter_->startHighScoreFlashing();
+                    }
+                } else {
+                    distanceMeter_->cancelHighScoreFlashing();
+                    restart();
+                }
+            }
+        }
     }
     if (e.type == SDL_KEYDOWN) {
         switch (e.key.keysym.sym) {
@@ -143,6 +244,7 @@ void Game::gameOver() {
     if (distanceRan_ > (float)highestScore_) {
         highestScore_ = (int)distanceRan_;
         distanceMeter_->setHighScore(highestScore_);
+        saveHighScore();
     }
 }
 
@@ -157,6 +259,7 @@ void Game::restart() {
     trex_->reset();
     horizon_->reset();
     distanceMeter_->reset();
+    distanceMeter_->cancelHighScoreFlashing();
     gameOverPanel_->reset();
     playSound(sndPress_);
 }
@@ -220,6 +323,8 @@ bool Game::checkCollision() const {
 }
 
 void Game::update() {
+    pollGamepad();
+
     Uint32 now       = SDL_GetTicks();
     float  deltaTime = (float)(now - lastTime_);
     lastTime_        = now;
@@ -264,7 +369,7 @@ void Game::update() {
         horizon_->update(0.0f, 0.0f, false, inverted_, inverted_);
         horizon_->draw(inverted_);
         trex_->update(0.0f, TrexStatus(-1), inverted_);
-        distanceMeter_->update(0.0f, (int)std::ceil(distanceRan_), inverted_);
+        distanceMeter_->update(deltaTime, (int)std::ceil(distanceRan_), inverted_);
         gameOverPanel_->update(deltaTime, inverted_);
     }
 }

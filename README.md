@@ -2,13 +2,13 @@
 
 ## Keybinds
 
-- Up = UP/SPACE
-- Down = DOWN
-- Restart = ENTER
+- Jump = UP/SPACE/A
+- Duck = DOWN/B
+- Restart = ENTER/START
 - Exit = ESCAPE
 
 ## Screenshots
 
-![](screens/light.png)
+![light mode preview](screens/light.png)
 
-![](screens/dark.png)
+![dark mode preview](screens/dark.png)

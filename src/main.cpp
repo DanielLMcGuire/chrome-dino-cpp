@@ -21,7 +21,7 @@ float MS_PER_FRAME  = 1000.0f / FPS;
 int SDL_main(int /*argc*/, char* /*argv*/[]) {
     std::srand((unsigned)std::time(nullptr));
 
-    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0) {
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_GAMECONTROLLER) < 0) {
 #ifdef _WIN32
         MessageBoxA(NULL, "SDL initialization error", "DinoGame | Error", MB_OK | MB_ICONERROR);
 #else

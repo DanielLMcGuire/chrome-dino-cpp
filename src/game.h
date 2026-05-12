@@ -6,7 +6,9 @@
 #include "game_over_panel.h"
 
 #include <SDL_mixer.h>
+#include <SDL2/SDL.h>
 #include <memory>
+#include <array>
 
 enum class GameState { WAITING, PLAYING, GAME_OVER };
 
@@ -54,6 +56,10 @@ private:
     Uint32 lastTime_       = 0;
     Uint32 crashTime_      = 0;
 
+    // Gamepad
+    SDL_GameController* gamepad_     = nullptr;
+    std::array<bool, 16> padPrev_    = {};
+
     void startGame();
     void gameOver();
     void restart();
@@ -62,4 +68,7 @@ private:
     void playSound(Mix_Chunk* chunk);
     void loadSounds();
     void handleNightMode(float deltaTime);
+    void pollGamepad();
+    void loadHighScore();
+    void saveHighScore();
 };

@@ -43,6 +43,26 @@ public:
         highScore_ = "HI " + s.substr(s.size() - maxUnits_);
     }
 
+    void resetHighScore() {
+        highScore_.clear();
+        hiFlashing_      = false;
+        hiFlashTimer_    = 0.0f;
+        hiFlashCount_    = 0;
+    }
+
+    SDL_Rect getHighScoreRect() const {
+        if (highScore_.empty()) return {0, 0, 0, 0};
+        static constexpr int PAD = 4;
+        int x = (x_ - maxUnits_ * 2 * CHAR_WIDTH) - PAD;
+        int w = CHAR_WIDTH * ((int)highScore_.size() + 1) + PAD;
+        int h = CHAR_HEIGHT + PAD * 2;
+        return { x, y_ - PAD, w, h };
+    }
+
+    void startHighScoreFlashing() { hiFlashing_ = true; hiFlashTimer_ = 0.0f; hiFlashCount_ = 0; }
+    bool isHighScoreFlashing()    const { return hiFlashing_; }
+    void cancelHighScoreFlashing()      { hiFlashing_ = false; }
+
     int getActualDistance(float distance) const {
         return distance > 0 ? (int)std::round(distance * COEFFICIENT) : 0;
     }
@@ -94,7 +114,22 @@ public:
                 drawDigit(i, digits_[i] - '0', false, night);
             }
         }
-        drawHighScore(night);
+
+        bool hiVisible = true;
+        if (hiFlashing_) {
+            hiFlashTimer_ += deltaTime;
+            if (hiFlashTimer_ > HI_FLASH_DURATION * 2.0f) {
+                hiFlashTimer_ = 0.0f;
+                ++hiFlashCount_;
+                if (hiFlashCount_ >= HI_FLASH_ITERATIONS * 2) {
+                    hiFlashing_   = false;
+                    hiFlashTimer_ = 0.0f;
+                    hiFlashCount_ = 0;
+                }
+            }
+            hiVisible = hiFlashTimer_ >= HI_FLASH_DURATION;
+        }
+        drawHighScore(night, hiVisible);
         return playSound;
     }
 
@@ -113,6 +148,11 @@ private:
     std::string highScore_;
     float flashTimer_      = 0.0f;
     int   flashIterations_ = 0;
+    bool  hiFlashing_      = false;
+    float hiFlashTimer_    = 0.0f;
+    int   hiFlashCount_    = 0;
+    static constexpr int   HI_FLASH_ITERATIONS = 3;
+    static constexpr float HI_FLASH_DURATION   = 1000.0f / 4.0f;
 
     void calcX() {
         x_ = GAME_WIDTH - DEST_WIDTH * (maxUnits_ + 1);
@@ -134,8 +174,8 @@ private:
                    dstX, dstY);
     }
 
-    void drawHighScore(bool night) const {
-        if (highScore_.empty()) return;
+    void drawHighScore(bool night, bool visible = true) const {
+        if (highScore_.empty() || !visible) return;
         SDL_Texture* tex = night ? spriteInv_ : sprite_;
         SDL_SetTextureAlphaMod(tex, (Uint8)(255 * 0.8f));
         for (int i = (int)highScore_.size() - 1; i >= 0; --i) {
