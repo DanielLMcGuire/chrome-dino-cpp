@@ -10,7 +10,7 @@
 #include <memory>
 #include <array>
 
-enum class GameState { WAITING, PLAYING, GAME_OVER };
+enum class GameState { WAITING, PLAYING, PAUSED, GAME_OVER };
 
 class Game {
 public:

@@ -114,6 +114,19 @@ void Game::handleEvent(const SDL_Event& e) {
             gamepad_ = nullptr;
         }
     }
+    if (e.type == SDL_WINDOWEVENT) {
+        if (e.window.event == SDL_WINDOWEVENT_FOCUS_LOST ||
+            e.window.event == SDL_WINDOWEVENT_MINIMIZED) {
+            if (state_ == GameState::PLAYING) {
+                state_ = GameState::PAUSED;
+            }
+        } else if (e.window.event == SDL_WINDOWEVENT_FOCUS_GAINED) {
+            if (state_ == GameState::PAUSED) {
+                state_    = GameState::PLAYING;
+                lastTime_ = SDL_GetTicks();
+            }
+        }
+    }
     if (e.type == SDL_MOUSEBUTTONDOWN && e.button.button == SDL_BUTTON_LEFT) {
         if (state_ == GameState::WAITING || state_ == GameState::PLAYING) {
             if (!keyJump_) {
@@ -321,6 +334,7 @@ void Game::update() {
 
     Uint32 now       = SDL_GetTicks();
     float  deltaTime = (float)(now - lastTime_);
+    if (deltaTime > MS_PER_FRAME * 5.0f) deltaTime = MS_PER_FRAME;
     lastTime_        = now;
 
     clearCanvas();
@@ -358,6 +372,11 @@ void Game::update() {
         }
 
         handleNightMode(deltaTime);
+
+    } else if (state_ == GameState::PAUSED) {
+        horizon_->draw(inverted_);
+        trex_->update(0.0f, TrexStatus(-1), inverted_);
+        distanceMeter_->update(0.0f, (int)std::ceil(distanceRan_), inverted_);
 
     } else if (state_ == GameState::GAME_OVER) {
         horizon_->update(0.0f, 0.0f, false, inverted_, inverted_);
