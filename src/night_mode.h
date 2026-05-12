@@ -34,19 +34,23 @@ public:
 
         if (opacity_ > 0.0f) {
             xPos_ = updateX(xPos_, MOON_SPEED);
-            for (auto& s : stars_) {
-                s.x = updateX(s.x, STAR_SPEED);
+            if (drawStars_) {
+                for (auto& s : stars_) {
+                    s.x = updateX(s.x, STAR_SPEED);
+                }
             }
             draw(night);
         } else {
             opacity_ = 0.0f;
             placeStars();
         }
+        drawStars_ = true;
     }
 
     void reset() {
         currentPhase_ = 0;
         opacity_      = 0.0f;
+        drawStars_    = false;
         xPos_         = (float)GAME_WIDTH;
         placeStars();
     }
@@ -56,10 +60,11 @@ private:
     SDL_Texture*  sprite_;
     SDL_Texture*  spriteInv_;
 
-    float xPos_       = 0.0f;
-    float yPos_       = 30.0f;
+    float xPos_         = 0.0f;
+    float yPos_         = 30.0f;
     int   currentPhase_ = 0;
-    float opacity_    = 0.0f;
+    float opacity_      = 0.0f;
+    bool  drawStars_    = false;
 
     struct Star { float x, y; int srcY; };
     Star stars_[NUM_STARS] = {};
@@ -83,10 +88,12 @@ private:
         Uint8 alpha = (Uint8)(opacity_ * 255.0f);
         SDL_SetTextureAlphaMod(tex, alpha);
 
-        for (const auto& s : stars_) {
-            drawSprite(renderer_, tex,
-                       SP_STAR.x, s.srcY, STAR_SIZE, STAR_SIZE,
-                       (int)s.x, (int)s.y);
+        if (drawStars_) {
+            for (const auto& s : stars_) {
+                drawSprite(renderer_, tex,
+                           SP_STAR.x, s.srcY, STAR_SIZE, STAR_SIZE,
+                           (int)s.x, (int)s.y);
+            }
         }
 
         int phase     = PHASES[currentPhase_];
