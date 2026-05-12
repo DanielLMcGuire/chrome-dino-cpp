@@ -5,6 +5,12 @@
 #include <cstdlib>
 #include <ctime>
 
+#ifdef _WIN32
+#define NOMINMAX
+#define WIN32_LEAN_AND_MEAN
+#include "windows.h"
+#endif
+
 #include "defs.h"
 #include "game.h"
 
@@ -16,19 +22,24 @@ int SDL_main(int /*argc*/, char* /*argv*/[]) {
     std::srand((unsigned)std::time(nullptr));
 
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0) {
+#ifdef _WIN32
+        MessageBoxA(NULL, "SDL initialization error", "DinoGame | Error", MB_OK | MB_ICONERROR);
+#else
         std::cerr << "SDL_Init error: " << SDL_GetError() << "\n";
+#endif
         return 1;
     }
 
     if (!(IMG_Init(IMG_INIT_PNG) & IMG_INIT_PNG)) {
-        std::cerr << "IMG_Init error: " << IMG_GetError() << "\n";
+        SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "DinoGame | Error",
+            (std::string("SDL image initialization error: ") + IMG_GetError()).c_str(), nullptr);
         SDL_Quit();
         return 1;
     }
 
     if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) < 0) {
-        std::cerr << "Mix_OpenAudio warning: " << Mix_GetError()
-                  << " (continuing without audio)\n";
+        SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_WARNING, "DinoGame | Warning",
+            (std::string("Audio loading error: ") + Mix_GetError() + "\nContinuing without audio.").c_str(), nullptr);
     }
 
     Mix_Init(MIX_INIT_MP3);
@@ -40,7 +51,8 @@ int SDL_main(int /*argc*/, char* /*argv*/[]) {
         SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI
     );
     if (!window) {
-        std::cerr << "SDL_CreateWindow error: " << SDL_GetError() << "\n";
+        SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "DinoGame | Error",
+            (std::string("Window creation error: ") + SDL_GetError()).c_str(), nullptr);
         IMG_Quit();
         SDL_Quit();
         return 1;
@@ -51,7 +63,8 @@ int SDL_main(int /*argc*/, char* /*argv*/[]) {
         SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC
     );
     if (!renderer) {
-        std::cerr << "SDL_CreateRenderer error: " << SDL_GetError() << "\n";
+        SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "DinoGame | Error",
+            (std::string("Renderer creation error: ") + SDL_GetError()).c_str(), window);
         SDL_DestroyWindow(window);
         IMG_Quit();
         SDL_Quit();
@@ -76,7 +89,8 @@ int SDL_main(int /*argc*/, char* /*argv*/[]) {
 
     SDL_Surface* surf = IMG_Load(spritePath);
     if (!surf) {
-        std::cerr << "IMG_Load error: " << IMG_GetError() << "\n";
+        SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "DinoGame | Error",
+            (std::string("Image loading error: ") + IMG_GetError()).c_str(), window);
         SDL_DestroyRenderer(renderer);
         SDL_DestroyWindow(window);
         IMG_Quit();
@@ -86,7 +100,8 @@ int SDL_main(int /*argc*/, char* /*argv*/[]) {
 
     SDL_Texture* sprite = SDL_CreateTextureFromSurface(renderer, surf);
     if (!sprite) {
-        std::cerr << "SDL_CreateTextureFromSurface error: " << SDL_GetError() << "\n";
+        SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "DinoGame | Error",
+            (std::string("Texture creation error: ") + SDL_GetError()).c_str(), window);
         SDL_FreeSurface(surf);
         SDL_DestroyRenderer(renderer);
         SDL_DestroyWindow(window);
@@ -101,7 +116,8 @@ int SDL_main(int /*argc*/, char* /*argv*/[]) {
     SDL_Texture* spriteInv = SDL_CreateTextureFromSurface(renderer, surfInv);
     SDL_FreeSurface(surfInv);
     if (!spriteInv) {
-        std::cerr << "SDL_CreateTextureFromSurface (inv) error: " << SDL_GetError() << "\n";
+        SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "DinoGame | Error",
+            (std::string("Texture creation (inv) error: ") + SDL_GetError()).c_str(), window);
         SDL_DestroyTexture(sprite);
         SDL_DestroyRenderer(renderer);
         SDL_DestroyWindow(window);
