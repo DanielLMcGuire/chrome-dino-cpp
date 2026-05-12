@@ -13,7 +13,6 @@ public:
     static constexpr float LOGO_PAUSE_DURATION = 875.0f;
     static constexpr float MS_PER_FRAME        = 875.0f / NUM_FRAMES;
 
-    // Frame x-offsets in sprite sheet (each frame is 36px wide)
     static constexpr int FRAMES[NUM_FRAMES] = {0, 36, 72, 108, 144, 180, 216, 252};
 
     GameOverPanel(SDL_Renderer* r, SDL_Texture* t, SDL_Texture* ti)
@@ -40,7 +39,6 @@ public:
     void draw(bool night) const {
         SDL_Texture* tex = night ? spriteInv_ : sprite_;
 
-        // "GAME OVER" text — centered, y = (height - 25) / 3
         int textX = (GAME_WIDTH - TEXT_W) / 2;
         int textY = (GAME_HEIGHT - 25) / 3;
         drawSprite(renderer_, tex,
@@ -49,7 +47,6 @@ public:
                    TEXT_W, TEXT_H,
                    textX, textY);
 
-        // Restart button — centered using restartHeight for x, y = height / 2
         int restartX = (GAME_WIDTH / 2) - (RESTART_H / 2);
         int restartY = GAME_HEIGHT / 2;
         int frame    = currentFrame_ < NUM_FRAMES ? currentFrame_ : NUM_FRAMES - 1;

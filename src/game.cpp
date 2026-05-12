@@ -237,6 +237,8 @@ void Game::startGame() {
     runningTime_  = 0.0f;
     distanceRan_  = 0.0f;
     currentSpeed_ = INITIAL_SPEED;
+    inverted_ = false;
+    invertTimer_ = 0.0f;
 }
 
 void Game::gameOver() {

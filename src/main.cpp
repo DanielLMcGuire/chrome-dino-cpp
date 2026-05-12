@@ -40,6 +40,8 @@ int SDL_main(int /*argc*/, char* /*argv*/[]) {
     if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) < 0) {
         SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_WARNING, "DinoGame | Warning",
             (std::string("Audio loading error: ") + Mix_GetError() + "\nContinuing without audio.").c_str(), nullptr);
+        IMG_Quit();
+        SDL_Quit();
     }
 
     Mix_Init(MIX_INIT_MP3);
@@ -53,6 +55,9 @@ int SDL_main(int /*argc*/, char* /*argv*/[]) {
     if (!window) {
         SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "DinoGame | Error",
             (std::string("Window creation error: ") + SDL_GetError()).c_str(), nullptr);
+        SDL_DestroyWindow(window);
+        Mix_CloseAudio();
+        Mix_Quit();
         IMG_Quit();
         SDL_Quit();
         return 1;
@@ -66,6 +71,8 @@ int SDL_main(int /*argc*/, char* /*argv*/[]) {
         SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "DinoGame | Error",
             (std::string("Renderer creation error: ") + SDL_GetError()).c_str(), window);
         SDL_DestroyWindow(window);
+        Mix_CloseAudio();
+        Mix_Quit();
         IMG_Quit();
         SDL_Quit();
         return 1;
@@ -93,6 +100,8 @@ int SDL_main(int /*argc*/, char* /*argv*/[]) {
             (std::string("Image loading error: ") + IMG_GetError()).c_str(), window);
         SDL_DestroyRenderer(renderer);
         SDL_DestroyWindow(window);
+        Mix_CloseAudio();
+        Mix_Quit();
         IMG_Quit();
         SDL_Quit();
         return 1;
@@ -105,6 +114,8 @@ int SDL_main(int /*argc*/, char* /*argv*/[]) {
         SDL_FreeSurface(surf);
         SDL_DestroyRenderer(renderer);
         SDL_DestroyWindow(window);
+        Mix_CloseAudio();
+        Mix_Quit();
         IMG_Quit();
         SDL_Quit();
         return 1;
@@ -121,6 +132,8 @@ int SDL_main(int /*argc*/, char* /*argv*/[]) {
         SDL_DestroyTexture(sprite);
         SDL_DestroyRenderer(renderer);
         SDL_DestroyWindow(window);
+        Mix_CloseAudio();
+        Mix_Quit();
         IMG_Quit();
         SDL_Quit();
         return 1;
