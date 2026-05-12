@@ -49,17 +49,17 @@ void Game::playSound(Mix_Chunk* chunk) {
 void Game::pollGamepad() {
     if (!gamepad_) return;
 
-    constexpr int BTN_JUMP    = 0;
-    constexpr int BTN_DUCK    = 1;
-    constexpr int BTN_RESTART = 9;
+    constexpr SDL_GameControllerButton BTN_JUMP    = SDL_CONTROLLER_BUTTON_A;
+    constexpr SDL_GameControllerButton BTN_DUCK    = SDL_CONTROLLER_BUTTON_B;
+    constexpr SDL_GameControllerButton BTN_RESTART = SDL_CONTROLLER_BUTTON_START;
 
-    auto pressed = [&](int idx) -> bool {
+    auto pressed = [&](SDL_GameControllerButton idx) -> bool {
         return SDL_GameControllerGetButton(gamepad_,
-            static_cast<SDL_GameControllerButton>(idx)) != 0;
+            idx) != 0;
     };
 
-    auto rising  = [&](int idx) { return  pressed(idx) && !padPrev_[idx]; };
-    auto falling = [&](int idx) { return !pressed(idx) &&  padPrev_[idx]; };
+    auto rising  = [&](SDL_GameControllerButton idx) { return  pressed(idx) && !padPrev_[idx]; };
+    auto falling = [&](SDL_GameControllerButton idx) { return !pressed(idx) &&  padPrev_[idx]; };
 
     if (rising(BTN_JUMP)) {
         if (state_ == GameState::WAITING || state_ == GameState::PLAYING) {
@@ -97,7 +97,7 @@ void Game::pollGamepad() {
     if (rising(BTN_RESTART) && state_ == GameState::GAME_OVER) restart();
 
     for (int i = 0; i < (int)padPrev_.size(); ++i)
-        padPrev_[i] = pressed(i);
+        padPrev_[i] = pressed(static_cast<SDL_GameControllerButton>(i));
 }
 
 void Game::handleEvent(const SDL_Event& e) {
