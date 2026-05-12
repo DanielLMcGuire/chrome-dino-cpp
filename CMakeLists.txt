@@ -45,6 +45,8 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(SDL2 SDL2_image SDL2_mixer)
 
+option(TESTS "Build with test runner" OFF)
+
 file(GLOB_RECURSE ALL_SOURCES "src/*.cpp")
 add_executable(DinoGame ${ALL_SOURCES})
 
@@ -104,6 +106,12 @@ endif()
 if (WIN32)
     set_target_properties(DinoGame PROPERTIES
         WIN32_EXECUTABLE TRUE
+    )
+endif()
+
+if (TESTS)
+    target_compile_definitions(DinoGame PRIVATE
+        AUTOPLAYER
     )
 endif()
 

@@ -14,6 +14,10 @@
 #include "defs.h"
 #include "game.h"
 
+#ifdef AUTOPLAYER
+#include "auto_player.h"
+#endif
+
 int   WINDOW_WIDTH  = GAME_WIDTH  * 2;
 int   WINDOW_HEIGHT = GAME_HEIGHT * 2;
 float MS_PER_FRAME  = 1000.0f / FPS;
@@ -47,7 +51,11 @@ int SDL_main(int /*argc*/, char* /*argv*/[]) {
     Mix_Init(MIX_INIT_MP3);
 
     SDL_Window* window = SDL_CreateWindow(
+#ifdef AUTOPLAYER
+        "Chromium Dino Game [AUTOPLAYER]",
+#else
         "Chromium Dino Game",
+#endif
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
         WINDOW_WIDTH, WINDOW_HEIGHT,
         SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI
@@ -142,10 +150,26 @@ int SDL_main(int /*argc*/, char* /*argv*/[]) {
 
     Game game(renderer, sprite, spriteInv);
 
+#ifdef AUTOPLAYER
+    AutoPlayer bot;
+    bot.enabled = true;
+#endif
+
     SDL_Event event;
 
     while (game.isRunning()) {
+#ifdef AUTOPLAYER
+        bot.tick(*game.getTrex(), *game.getHorizon(), game.getCurrentSpeed());
+#endif
+
         while (SDL_PollEvent(&event)) {
+#ifdef AUTOPLAYER
+            if (event.type == SDL_KEYDOWN &&
+                event.key.keysym.sym == SDLK_TAB)
+            {
+                bot.enabled = !bot.enabled;
+            } else
+#endif
             game.handleEvent(event);
         }
 
