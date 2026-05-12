@@ -31,6 +31,7 @@ public:
     void reset() {
         obstacles.clear();
         clouds_.clear();
+        obstacleHistory_.clear();
         horizonLine_.reset();
         nightMode_.reset();
         addCloud();
@@ -58,7 +59,8 @@ private:
     float cloudSpeed_ = BG_CLOUD_SPEED;
 
     std::vector<const ObstacleTypeDef*> obstacleTypes_;
-    std::string lastObstacleType_;
+    static constexpr int MAX_OBSTACLE_DUPLICATION = 2;
+    std::vector<std::string> obstacleHistory_;
 
     void addCloud() {
         clouds_.push_back(std::make_unique<Cloud>(renderer_, sprite_, spriteInv_));
@@ -108,6 +110,13 @@ private:
         }
     }
 
+    bool duplicateObstacleCheck(const std::string& type) const {
+        int count = 0;
+        for (const auto& h : obstacleHistory_)
+            count = (h == type) ? count + 1 : 0;
+        return count >= MAX_OBSTACLE_DUPLICATION;
+    }
+
     void addNewObstacle(float speed) {
         std::vector<const ObstacleTypeDef*> candidates;
         if (speed >= getCactusSmallDef().minSpeed)
@@ -119,19 +128,18 @@ private:
 
         if (candidates.empty()) candidates.push_back(&getCactusSmallDef());
 
-        const ObstacleTypeDef* chosen = nullptr;
-        if (candidates.size() == 1 || lastObstacleType_.empty()) {
-            chosen = candidates[randInt(0, (int)candidates.size() - 1)];
-        } else {
-            std::vector<const ObstacleTypeDef*> filtered;
-            for (auto c : candidates)
-                if (std::string(c->type) != lastObstacleType_)
-                    filtered.push_back(c);
-            if (filtered.empty()) filtered = candidates;
-            chosen = filtered[randInt(0, (int)filtered.size() - 1)];
+        const ObstacleTypeDef* chosen =
+            candidates[randInt(0, (int)candidates.size() - 1)];
+
+        if (candidates.size() > 1 && duplicateObstacleCheck(chosen->type)) {
+            addNewObstacle(speed);
+            return;
         }
 
-        lastObstacleType_ = chosen->type;
+        obstacleHistory_.insert(obstacleHistory_.begin(), chosen->type);
+        if ((int)obstacleHistory_.size() > MAX_OBSTACLE_DUPLICATION)
+            obstacleHistory_.resize(MAX_OBSTACLE_DUPLICATION);
+
         obstacles.push_back(
             std::make_unique<Obstacle>(renderer_, sprite_, spriteInv_, chosen, speed));
     }
