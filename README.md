@@ -9,7 +9,7 @@
 
 ## Missing features from the original (no plan to implement)
 
-- System for seasonal themes
+- System for seasonal themes (e.g. custom floating objects, custom obstacles, custom collectables)
 - Accessibility features (e.g. synthesized obstacle warning, slow game mode)
 
 ## Screenshots
