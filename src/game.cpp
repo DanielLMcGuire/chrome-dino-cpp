@@ -376,6 +376,7 @@ void Game::update() {
         handleNightMode(deltaTime);
 
     } else if (state_ == GameState::PAUSED) {
+        horizon_->update(0.0f, 0.0f, false, inverted_, inverted_);
         horizon_->draw(inverted_);
         trex_->update(0.0f, TrexStatus(-1), inverted_);
         distanceMeter_->update(0.0f, (int)std::ceil(distanceRan_), inverted_);
