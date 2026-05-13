@@ -6,10 +6,10 @@
 ## Keybinds
 
 |Control|Keyboard|Gamepad|
-|:--|:-:|:-:|
+|--:|:-:|:--|
 |JUMP|`UP`, `SPACE`|`A`|
 |DUCK|`DOWN`|`B`|
-|RESTART|`ENTER`|`START`/`≡`|
+|RESTART|`ENTER`|`≡`|
 |EXIT|`ESCAPE`|N/A|
 
 ## Missing features from the original
