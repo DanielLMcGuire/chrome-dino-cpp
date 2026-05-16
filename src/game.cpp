@@ -89,6 +89,7 @@ void Game::pollGamepad() {
     constexpr SDL_GameControllerButton BTN_JUMP    = SDL_CONTROLLER_BUTTON_A;
     constexpr SDL_GameControllerButton BTN_DUCK    = SDL_CONTROLLER_BUTTON_X;
     constexpr SDL_GameControllerButton BTN_RESTART = SDL_CONTROLLER_BUTTON_START;
+    constexpr SDL_GameControllerButton BTN_CLEAR_HISCORE = SDL_CONTROLLER_BUTTON_LEFTSHOULDER;
 
     auto pressed = [&](SDL_GameControllerButton idx) -> bool {
         return SDL_GameControllerGetButton(gamepad_,
@@ -132,6 +133,19 @@ void Game::pollGamepad() {
     }
 
     if (rising(BTN_RESTART) && state_ == GameState::GAME_OVER) restart();
+
+    if (rising(BTN_CLEAR_HISCORE) && state_ == GameState::GAME_OVER) {
+        Uint32 elapsed = SDL_GetTicks() - crashTime_;
+        if (elapsed >= GAMEOVER_CLEAR_TIME) {
+            if (distanceMeter_->isHighScoreFlashing()) {
+                highestScore_ = 0;
+                saveHighScore();
+                distanceMeter_->resetHighScore();
+            } else {
+                distanceMeter_->startHighScoreFlashing();
+            }
+        }
+    }
 
     for (int i = 0; i < (int)padPrev_.size(); ++i)
         padPrev_[i] = pressed(static_cast<SDL_GameControllerButton>(i));

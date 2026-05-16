@@ -13,6 +13,7 @@ There are configs for both UWP (Xbox) and win32/posix. (use -DXBOX=ON to enable 
 |DUCK|`DOWN`|`X`|
 |RESTART|`ENTER`|`≡`|
 |EXIT|`ESCAPE`|N/A|
+|Clear high score|Double-click `HI`|`LB`|
 
 ## Missing features from the original
 
