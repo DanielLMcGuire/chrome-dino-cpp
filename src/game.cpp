@@ -87,7 +87,7 @@ void Game::pollGamepad() {
     if (!gamepad_) return;
 
     constexpr SDL_GameControllerButton BTN_JUMP    = SDL_CONTROLLER_BUTTON_A;
-    constexpr SDL_GameControllerButton BTN_DUCK    = SDL_CONTROLLER_BUTTON_B;
+    constexpr SDL_GameControllerButton BTN_DUCK    = SDL_CONTROLLER_BUTTON_X;
     constexpr SDL_GameControllerButton BTN_RESTART = SDL_CONTROLLER_BUTTON_START;
 
     auto pressed = [&](SDL_GameControllerButton idx) -> bool {
@@ -312,10 +312,10 @@ void Game::restart() {
 
 void Game::clearCanvas() const {
     if (inverted_) {
-        static auto [r, g, b, a] = HexToRGBA(INV_CANVAS);
+        static const auto [r, g, b, a] = HexToRGBA(INV_CANVAS);
         SDL_SetRenderDrawColor(renderer_, r, g, b, a);
     } else {
-        static auto [r, g, b, a] = HexToRGBA(DAY_CANVAS);
+        static const auto [r, g, b, a] = HexToRGBA(DAY_CANVAS);
         SDL_SetRenderDrawColor(renderer_, r, g, b, a);
     }
     SDL_RenderClear(renderer_);
