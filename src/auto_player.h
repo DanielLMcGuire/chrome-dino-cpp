@@ -1,7 +1,7 @@
 #pragma once
 #include "defs.h"
-#include "trex.h"
-#include "horizon.h"
+#include "entities/trex.h"
+#include "entities/horizon.h"
 
 // This file is ported from
 // https://mathewsachin.github.io/blog/2026/03/14/chrome-dino-autoplay.html

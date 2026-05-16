@@ -19,7 +19,6 @@ There are configs for both UWP (Xbox) and win32/posix. (use -DXBOX=ON to enable 
 - System for seasonal themes (e.g. custom floating objects, custom obstacles, custom collectables)
 - Accessibility features (e.g. synthesized obstacle warning, slow game mode)
 
-## Bugs (UWP only)
+## Bugs
 
-- Crash when ducking (no clue)
-- Audio does not play
+- Crash when ducking, Xbox only (not sure why)

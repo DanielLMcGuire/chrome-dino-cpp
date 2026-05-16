@@ -5,6 +5,9 @@
 #include <cmath>
 #include <cstdlib>
 #include <algorithm>
+#include <tuple>
+#include <cstdint>
+#include "colbox.h"
 
 constexpr int GAME_WIDTH  = 600;
 constexpr int GAME_HEIGHT = 150;
@@ -13,6 +16,19 @@ extern int WINDOW_HEIGHT;
 
 constexpr int FPS = 60; // Fallback
 extern float MS_PER_FRAME;
+
+#ifdef UWP
+inline constexpr char* hitWav = "ms-appx:///resources/hit.mp3";
+inline constexpr char* pressWav = "ms-appx:///resources/button-press.mp3";
+inline constexpr char* scoreWav = "ms-appx:///resources/score-reached.mp3";
+#else
+inline constexpr char* hitWav = "resources/sounds/hit.mp3";
+inline constexpr char* pressWav = "resources/sounds/button-press.mp3";
+inline constexpr char* scoreWav = "resources/sounds/score-reached.mp3";
+#endif
+
+constexpr uint32_t INV_CANVAS = 0x535353;
+constexpr uint32_t DAY_CANVAS = 0xF7F7F7;
 
 constexpr float INITIAL_SPEED        = 6.0f;
 constexpr float MAX_SPEED            = 13.0f;
@@ -59,19 +75,6 @@ constexpr SpritePos SP_RESTART      = {  2, 68};
 constexpr SpritePos SP_TEXT         = {655,  2};
 constexpr SpritePos SP_HORIZON      = {  2, 52};
 
-struct CollisionBox { int x, y, w, h; };
-
-inline CollisionBox adjustedBox(const CollisionBox& box, const CollisionBox& origin) {
-    return {box.x + origin.x, box.y + origin.y, box.w, box.h};
-}
-
-inline bool boxesOverlap(const CollisionBox& a, const CollisionBox& b) {
-    return a.x < b.x + b.w  &&
-           a.x + a.w > b.x  &&
-           a.y < b.y + b.h  &&
-           a.y + a.h > b.y;
-}
-
 struct ObstacleTypeDef {
     const char* type;
     int   width;
@@ -86,57 +89,4 @@ struct ObstacleTypeDef {
     float frameRate;
 };
 
-const ObstacleTypeDef& getCactusSmallDef();
-const ObstacleTypeDef& getCactusLargeDef();
-const ObstacleTypeDef& getPterodactylDef();
-
-inline float randFloat() {
-    return static_cast<float>(std::rand()) / static_cast<float>(RAND_MAX);
-}
-
-inline int randInt(int lo, int hi) {
-    if (lo >= hi) return lo;
-    return lo + std::rand() % (hi - lo + 1);
-}
-
 inline bool IS_HIDPI = false;
-
-inline void drawSprite(SDL_Renderer* r, SDL_Texture* t,
-                       int sx, int sy, int sw, int sh,
-                       int dx, int dy,
-                       int dw = -1, int dh = -1,
-                       double angle = 0.0,
-                       SDL_RendererFlip flip = SDL_FLIP_NONE)
-{
-    if (IS_HIDPI) {
-        sx *= 2; sy *= 2; sw *= 2; sh *= 2;
-    }
-    SDL_Rect src = { sx, sy, sw, sh };
-    SDL_Rect dst = {
-        dx,
-        dy,
-        (dw < 0 ? sw / (IS_HIDPI ? 2 : 1) : dw),
-        (dh < 0 ? sh / (IS_HIDPI ? 2 : 1) : dh)
-    };
-    if (angle != 0.0 || flip != SDL_FLIP_NONE)
-        SDL_RenderCopyEx(r, t, &src, &dst, angle, nullptr, flip);
-    else
-        SDL_RenderCopy(r, t, &src, &dst);
-}
-
-inline SDL_Surface* createInvertedSurface(SDL_Surface* src) {
-    SDL_Surface* conv = SDL_ConvertSurfaceFormat(src, SDL_PIXELFORMAT_RGBA32, 0);
-    if (!conv) return nullptr;
-    SDL_LockSurface(conv);
-    Uint8* px = (Uint8*)conv->pixels;
-    for (int i = 0; i < conv->h; ++i) {
-        for (int j = 0; j < conv->w; ++j) {
-            Uint8* p = px + i * conv->pitch + j * 4;
-            p[0] = 255 - p[0]; // R
-            p[1] = 255 - p[1]; // G
-            p[2] = 255 - p[2]; // B
-        }
-    }
-    SDL_UnlockSurface(conv);
-    return conv;
-}

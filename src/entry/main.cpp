@@ -4,6 +4,7 @@
 #include <iostream>
 #include <cstdlib>
 #include <ctime>
+#include "util.h"
 
 #ifdef _WIN32
 #define NOMINMAX

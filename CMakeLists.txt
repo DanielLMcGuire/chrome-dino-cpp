@@ -57,13 +57,13 @@ FetchContent_MakeAvailable(SDL2 SDL2_image SDL2_mixer)
 
 set(SOURCES
     src/game.cpp
-    src/obstacle.cpp
-    src/trex.cpp
+    src/entities/obstacle.cpp
+    src/entities/trex.cpp
 )
 
 if(XBOX)
     list(APPEND SOURCES
-        src/main-uwp.cpp
+        src/entry/main-uwp.cpp
         Package.appxmanifest
     )
 
@@ -86,7 +86,7 @@ if(XBOX)
     set_property(SOURCE ${GAME_RESOURCES} PROPERTY VS_DEPLOYMENT_LOCATION "resources")
 
 else()
-    list(APPEND SOURCES src/main.cpp)
+    list(APPEND SOURCES src/entry/main.cpp)
 endif()
 
 if(XBOX)
@@ -105,6 +105,7 @@ target_include_directories(DinoGame PRIVATE src)
 
 target_compile_definitions(DinoGame PRIVATE NOMINMAX WIN32_LEAN_AND_MEAN)
 if(XBOX)
+    target_compile_definitions(DinoGame PRIVATE UWP)
     target_compile_definitions(DinoGame PRIVATE WINAPI_FAMILY=WINAPI_FAMILY_APP _UNICODE UNICODE)
 endif()
 if(TESTS)

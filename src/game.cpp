@@ -1,4 +1,9 @@
 #include "game.h"
+#include "util.h"
+#ifdef UWP
+#include <winrt/Windows.Foundation.h>
+#include <winrt/Windows.Storage.h>
+#endif
 #include <cmath>
 #include <algorithm>
 #include <fstream>
@@ -24,13 +29,38 @@ Game::~Game() {
 }
 
 void Game::loadSounds() {
-    sndHit_   = Mix_LoadWAV("resources/sounds/hit.mp3");
-    sndPress_ = Mix_LoadWAV("resources/sounds/button-press.mp3");
-    sndScore_ = Mix_LoadWAV("resources/sounds/score-reached.mp3");
+#ifdef UWP
+    {
+        auto bytes = LoadFileBytes(hitWav);
+        SDL_RWops* rw = SDL_RWFromMem(bytes.data(), (int)bytes.size());
+        sndHit_ = Mix_LoadWAV_RW(rw, 1);
+    }
+    {
+        auto bytes = LoadFileBytes(pressWav);
+        SDL_RWops* rw = SDL_RWFromMem(bytes.data(), (int)bytes.size());
+        sndPress_ = Mix_LoadWAV_RW(rw, 1);
+    }
+    {
+        auto bytes = LoadFileBytes(scoreWav);
+        SDL_RWops* rw = SDL_RWFromMem(bytes.data(), (int)bytes.size());
+        sndScore_ = Mix_LoadWAV_RW(rw, 1);
+    }
+#else
+    sndHit_   = Mix_LoadWAV(hitWav);
+    sndPress_ = Mix_LoadWAV(pressWav);
+    sndScore_ = Mix_LoadWAV(scoreWav);
+#endif
 }
 
 void Game::loadHighScore() {
+#ifdef UWP
+    auto localFolder = winrt::Windows::Storage::ApplicationData::Current().LocalFolder();
+    std::wstring path(localFolder.Path().c_str());
+    path += L"\\highscore.dat";
+    std::ifstream f(path, std::ios::binary);
+#else
     std::ifstream f("highscore.dat", std::ios::binary);
+#endif
     if (!f) return;
     f.read(reinterpret_cast<char*>(&highestScore_), sizeof(highestScore_));
     if (f && highestScore_ > 0)
@@ -38,7 +68,14 @@ void Game::loadHighScore() {
 }
 
 void Game::saveHighScore() {
+#ifdef UWP
+    auto localFolder = winrt::Windows::Storage::ApplicationData::Current().LocalFolder();
+    std::wstring path(localFolder.Path().c_str());
+    path += L"\\highscore.dat";
+    std::ofstream f(path, std::ios::binary | std::ios::trunc);
+#else
     std::ofstream f("highscore.dat", std::ios::binary | std::ios::trunc);
+#endif
     f.write(reinterpret_cast<const char*>(&highestScore_), sizeof(highestScore_));
 }
 
@@ -275,9 +312,11 @@ void Game::restart() {
 
 void Game::clearCanvas() const {
     if (inverted_) {
-        SDL_SetRenderDrawColor(renderer_, 83, 83, 83, 255);
+        static auto [r, g, b, a] = HexToRGBA(INV_CANVAS);
+        SDL_SetRenderDrawColor(renderer_, r, g, b, a);
     } else {
-        SDL_SetRenderDrawColor(renderer_, 247, 247, 247, 255);
+        static auto [r, g, b, a] = HexToRGBA(DAY_CANVAS);
+        SDL_SetRenderDrawColor(renderer_, r, g, b, a);
     }
     SDL_RenderClear(renderer_);
 }
@@ -305,12 +344,22 @@ bool Game::checkCollision() const {
     if (horizon_->obstacles.empty()) return false;
     const auto& obs = *horizon_->obstacles[0];
 
-    CollisionBox tRexBox = {
-        (int)trex_->xPos + 1,
-        (int)trex_->yPos + 1,
-        TREX_WIDTH - 2,
-        TREX_HEIGHT - 2
-    };
+    CollisionBox tRexBox;
+    if (trex_->ducking) {
+        tRexBox = {
+            (int)trex_->xPos + 1,
+            (int)trex_->yPos + TREX_HEIGHT - TREX_HEIGHT_DUCK + 1,
+            TREX_WIDTH_DUCK - 2,
+            TREX_HEIGHT_DUCK - 2
+        };
+    } else {
+        tRexBox = {
+            (int)trex_->xPos + 1,
+            (int)trex_->yPos + 1,
+            TREX_WIDTH - 2,
+            TREX_HEIGHT - 2
+        };
+    }
     CollisionBox obsBox = {
         (int)obs.xPos + 1,
         (int)obs.yPos + 1,
@@ -320,7 +369,7 @@ bool Game::checkCollision() const {
 
     if (!boxesOverlap(tRexBox, obsBox)) return false;
 
-    const auto& tRexBoxes = trex_->getCollisionBoxes();
+    auto tRexBoxes = trex_->getCollisionBoxes();
     for (const auto& tb : tRexBoxes) {
         CollisionBox adjT = adjustedBox(tb, tRexBox);
         for (const auto& ob : obs.collisionBoxes) {

@@ -1,5 +1,7 @@
 #pragma once
 #include "defs.h"
+#include "rand.h"
+#include "drawSprite.h"
 
 class Cloud {
 public:

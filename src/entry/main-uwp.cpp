@@ -9,6 +9,7 @@
 #include <ctime>
 #include <future>
 #include <string>
+#include "util.h"
 
 #include <winrt/Windows.ApplicationModel.h>
 #include <winrt/Windows.Storage.h>

@@ -1,9 +1,9 @@
 #pragma once
 #include "defs.h"
-#include "trex.h"
-#include "horizon.h"
-#include "distance_meter.h"
-#include "game_over_panel.h"
+#include "entities/trex.h"
+#include "entities/horizon.h"
+#include "entities/distance_meter.h"
+#include "entities/game_over_panel.h"
 
 #include <SDL_mixer.h>
 #include <SDL2/SDL.h>

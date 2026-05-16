@@ -1,4 +1,6 @@
 #include "obstacle.h"
+#include "rand.h"
+#include "drawSprite.h"
 #include <cmath>
 
 static const ObstacleTypeDef s_cactusSmall = {

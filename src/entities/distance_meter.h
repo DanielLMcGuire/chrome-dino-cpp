@@ -2,6 +2,7 @@
 #include "defs.h"
 #include <string>
 #include <vector>
+#include "drawSprite.h"
 
 class DistanceMeter {
 public:

@@ -1,5 +1,7 @@
 #include "trex.h"
 #include <cmath>
+#include "rand.h"
+#include "drawSprite.h"
 
 const Trex::FrameInfo Trex::ANIM_FRAMES[] = {
     /* WAITING  */ {{  0,  44}, 1000.0f / 3.0f},

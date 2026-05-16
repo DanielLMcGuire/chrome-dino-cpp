@@ -4,6 +4,8 @@
 #include "horizon_line.h"
 #include "night_mode.h"
 #include "obstacle.h"
+#include "colbox.h"
+#include "util.h"
 #include <vector>
 #include <memory>
 
