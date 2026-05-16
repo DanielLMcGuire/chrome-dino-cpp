@@ -36,7 +36,7 @@ static constexpr ColorRGBA HexToRGBA(uint32_t hex)
     const uint8_t r = hasAlpha ? (hex >> 24) & 0xFF : (hex >> 16) & 0xFF;
     const uint8_t g = hasAlpha ? (hex >> 16) & 0xFF : (hex >> 8)  & 0xFF;
     const uint8_t b = hasAlpha ? (hex >> 8)  & 0xFF :  hex        & 0xFF;
-    const uint8_t a = hasAlpha ?  hex        & 0xFF : 100;
+    const uint8_t a = hasAlpha ?  hex        & 0xFF : 255;
 
     return { r, g, b, a };
 }
