@@ -1,4 +1,13 @@
 cmake_minimum_required(VERSION 3.15)
+
+option(XBOX "Build for Xbox (UWP)" OFF)
+option(TESTS "Build with autoplayer" OFF)
+
+if(XBOX)
+    set(CMAKE_SYSTEM_NAME    WindowsStore)
+    set(CMAKE_SYSTEM_VERSION "10.0")
+endif()
+
 project(DinoGame CXX)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -34,101 +43,100 @@ set(SDL2MIXER_OPUS OFF CACHE BOOL "" FORCE)
 set(SDL2MIXER_OGG OFF CACHE BOOL "" FORCE)
 set(SDL2MIXER_WAVPACK OFF CACHE BOOL "" FORCE)
 
+if(XBOX)
+    set(SDL_FILESYSTEM ON CACHE BOOL "" FORCE)
+    set(SDL_FILE ON CACHE BOOL "" FORCE)
+    set(SDL_STDIO OFF CACHE BOOL "" FORCE)
+endif()
+
 include(FetchContent)
-
-FetchContent_Declare(
-    SDL2
-    GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
-    GIT_TAG release-2.30.8
-)
-
-FetchContent_Declare(
-    SDL2_image
-    GIT_REPOSITORY https://github.com/libsdl-org/SDL_image.git
-    GIT_TAG release-2.8.12
-)
-
-FetchContent_Declare(
-    SDL2_mixer
-    GIT_REPOSITORY https://github.com/libsdl-org/SDL_mixer.git
-    GIT_TAG release-2.8.0
-)
-
+FetchContent_Declare(SDL2 GIT_REPOSITORY https://github.com/libsdl-org/SDL.git GIT_TAG release-2.30.8)
+FetchContent_Declare(SDL2_image GIT_REPOSITORY https://github.com/libsdl-org/SDL_image.git GIT_TAG release-2.8.2)
+FetchContent_Declare(SDL2_mixer GIT_REPOSITORY https://github.com/libsdl-org/SDL_mixer.git GIT_TAG release-2.8.0)
 FetchContent_MakeAvailable(SDL2 SDL2_image SDL2_mixer)
 
-option(TESTS "Build with test runner" OFF)
+set(SOURCES
+    src/game.cpp
+    src/obstacle.cpp
+    src/trex.cpp
+)
 
-file(GLOB_RECURSE ALL_SOURCES "src/*.cpp")
-add_executable(DinoGame ${ALL_SOURCES})
+if(XBOX)
+    list(APPEND SOURCES
+        src/main-uwp.cpp
+        Package.appxmanifest
+    )
+
+    set(UWP_ASSETS
+        assets/LockScreenLogo.scale-200.png
+        assets/SplashScreen.scale-200.png
+        assets/Square150x150Logo.scale-200.png
+        assets/Square44x44Logo.scale-200.png
+        assets/Square44x44Logo.targetsize-24_altform-unplated.png
+        assets/StoreLogo.png
+        assets/Wide310x150Logo.scale-200.png
+    )
+    list(APPEND SOURCES ${UWP_ASSETS})
+    set_property(SOURCE ${UWP_ASSETS} PROPERTY VS_DEPLOYMENT_CONTENT 1)
+    set_property(SOURCE ${UWP_ASSETS} PROPERTY VS_DEPLOYMENT_LOCATION "assets")
+
+    file(GLOB_RECURSE GAME_RESOURCES "resources/*")
+    list(APPEND SOURCES ${GAME_RESOURCES})
+    set_property(SOURCE ${GAME_RESOURCES} PROPERTY VS_DEPLOYMENT_CONTENT 1)
+    set_property(SOURCE ${GAME_RESOURCES} PROPERTY VS_DEPLOYMENT_LOCATION "resources")
+
+else()
+    list(APPEND SOURCES src/main.cpp)
+endif()
+
+if(XBOX)
+    list(APPEND SOURCES
+        "${SDL2_SOURCE_DIR}/src/main/winrt/SDL_winrt_main_NonXAML.cpp"
+    )
+    set_source_files_properties(
+        "${SDL2_SOURCE_DIR}/src/main/winrt/SDL_winrt_main_NonXAML.cpp"
+        PROPERTIES COMPILE_FLAGS "/ZW"
+    )
+endif()
+
+add_executable(DinoGame ${SOURCES})
+
+target_include_directories(DinoGame PRIVATE src)
+
+target_compile_definitions(DinoGame PRIVATE NOMINMAX WIN32_LEAN_AND_MEAN)
+if(XBOX)
+    target_compile_definitions(DinoGame PRIVATE WINAPI_FAMILY=WINAPI_FAMILY_APP _UNICODE UNICODE)
+endif()
+if(TESTS)
+    target_compile_definitions(DinoGame PRIVATE AUTOPLAYER)
+endif()
 
 target_link_libraries(DinoGame PRIVATE
     SDL2::SDL2-static
     SDL2_image::SDL2_image-static
     SDL2_mixer::SDL2_mixer-static
-    SDL2::SDL2main
 )
 
-if(MSVC)
-    target_compile_options(DinoGame PRIVATE
-        $<$<CONFIG:Release,RelWithDebInfo>:
-            /O2
-            /GL
-            /Gy
-            /fp:fast
-        >
-    )
-    target_link_options(DinoGame PRIVATE
-        $<$<CONFIG:Release,RelWithDebInfo>:
-            /LTCG
-        >
-    )
-elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    target_compile_options(DinoGame PRIVATE
-        $<$<CONFIG:Release,RelWithDebInfo>:
-            -O3
-            -march=native
-            -funroll-loops
-            -ffast-math
-            -flto=thin
-        >
-    )
-    target_link_options(DinoGame PRIVATE
-        $<$<CONFIG:Release,RelWithDebInfo>:
-            -flto=thin
-        >
-    )
-elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
-    target_compile_options(DinoGame PRIVATE
-        $<$<CONFIG:Release,RelWithDebInfo>:
-            -O3
-            -march=native
-            -funroll-loops
-            -ffast-math
-            -flto
-        >
-    )
-    target_link_options(DinoGame PRIVATE
-        $<$<CONFIG:Release,RelWithDebInfo>:
-            -flto
-        >
-    )
+if(XBOX)
+    target_link_libraries(DinoGame PRIVATE WindowsApp.lib)
+else()
+    target_link_libraries(DinoGame PRIVATE SDL2::SDL2main)
 endif()
 
-if (WIN32)
+set_target_properties(DinoGame PROPERTIES WIN32_EXECUTABLE TRUE)
+if(XBOX)
     set_target_properties(DinoGame PROPERTIES
-        WIN32_EXECUTABLE TRUE
+        VS_WINDOWS_TARGET_PLATFORM_MIN_VERSION "10.0.17763.0"
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL"
+        VS_WINRT_EXTENSIONS OFF
     )
 endif()
 
-if (TESTS)
-    target_compile_definitions(DinoGame PRIVATE
-        AUTOPLAYER
+if(NOT XBOX)
+    add_custom_command(TARGET DinoGame POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+            "${CMAKE_SOURCE_DIR}/resources"
+            "$<TARGET_FILE_DIR:DinoGame>/resources"
+        COMMENT "Copying resources for desktop build..."
     )
 endif()
-
-add_custom_command(TARGET DinoGame POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-        "${CMAKE_SOURCE_DIR}/resources"
-        "$<TARGET_FILE_DIR:DinoGame>/resources"
-    COMMENT "Copying resources..."
-)

@@ -3,6 +3,8 @@
 [![preview](screens/video.gif)](screens/video.mp4)
 <sub>(Click for uncompressed video, do note capture **lags** a bit more than usual)</sub>
 
+There are configs for both UWP (Xbox) and win32. (use -DXBOX=ON to enable UWP)
+
 ## Keybinds
 
 |Control|Keyboard|Gamepad|

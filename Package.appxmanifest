@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Package
+    xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+  xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest"
+  xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+    IgnorableNamespaces="uap mp">
+
+    <Identity
+        Name="DinoGame"
+        Publisher="CN=DanielLMcGuire"
+        Version="1.0.0.0" />
+
+    <Properties>
+        <DisplayName>Chromium Dino Game</DisplayName>
+        <PublisherDisplayName>Daniel McGuire</PublisherDisplayName>
+        <Logo>Assets\StoreLogo.png</Logo>
+    </Properties>
+
+    <Dependencies>
+        <TargetDeviceFamily
+            Name="Windows.Universal"
+            MinVersion="10.0.17763.0"
+            MaxVersionTested="10.0.19041.0" />
+    </Dependencies>
+
+    <Resources>
+        <Resource Language="en-us" />
+    </Resources>
+
+    <mp:PhoneIdentity
+    PhoneProductId="00000000-0000-0000-0000-000000000000"
+    PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
+
+    <Applications>
+        <Application
+            Id="App"
+            Executable="$targetnametoken$.exe"
+            EntryPoint="DinoGame.App">
+            <uap:VisualElements
+                DisplayName="Chromium Dino Game"
+                Description="Chromium Dino Game"
+                BackgroundColor="transparent"
+                Square150x150Logo="Assets\Square150x150Logo.png"
+                Square44x44Logo="Assets\Square44x44Logo.png">
+                <uap:SplashScreen Image="Assets\SplashScreen.png" />
+            </uap:VisualElements>
+        </Application>
+    </Applications>
+
+</Package>
