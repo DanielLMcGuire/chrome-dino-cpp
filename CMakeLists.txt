@@ -86,7 +86,10 @@ if(XBOX)
     set_property(SOURCE ${GAME_RESOURCES} PROPERTY VS_DEPLOYMENT_LOCATION "resources")
 
 else()
-    list(APPEND SOURCES src/entry/main.cpp)
+    list(APPEND SOURCES 
+        src/entry/main.cpp
+        src/entry/main.rc
+    )
 endif()
 
 if(XBOX)
