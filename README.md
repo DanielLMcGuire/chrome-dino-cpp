@@ -11,7 +11,7 @@ There are configs for both UWP (Xbox) and win32/posix. (use -DXBOX=ON to enable 
 |--:|:-:|:--|
 |JUMP|`UP`, `SPACE`|`A`|
 |DUCK|`DOWN`|`X`|
-|RESTART|`ENTER`|`≡`|
+|START/RESTART|`ENTER`|`≡`|
 |EXIT|`ESCAPE`|N/A|
 |Clear high score|Double-click `HI`|`LB`|
 

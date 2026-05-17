@@ -131,8 +131,11 @@ void Game::pollGamepad() {
         trex_->speedDrop = false;
         trex_->setDuck(false);
     }
-
-    if (rising(BTN_RESTART) && state_ == GameState::GAME_OVER) restart();
+    
+    if (rising(BTN_RESTART)) {
+        if (state_ == GameState::WAITING) startGame();
+        if (state_ == GameState::GAME_OVER) restart();
+    }
 
     if (rising(BTN_CLEAR_HISCORE) && state_ == GameState::GAME_OVER) {
         Uint32 elapsed = SDL_GetTicks() - crashTime_;
@@ -258,7 +261,9 @@ void Game::handleEvent(const SDL_Event& e) {
                 break;
 
             case SDLK_RETURN:
-                if (state_ == GameState::GAME_OVER) {
+                if (state_ == GameState::WAITING) {
+                    startGame();
+                } else if (state_ == GameState::GAME_OVER) {
                     restart();
                 }
                 break;
@@ -290,6 +295,7 @@ void Game::startGame() {
     currentSpeed_ = INITIAL_SPEED;
     inverted_ = false;
     invertTimer_ = 0.0f;
+    trex_->update(0.0f, TrexStatus::RUNNING, false);
 }
 
 void Game::gameOver() {
