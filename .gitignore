@@ -2,3 +2,4 @@ build/
 /original
 highscore.dat
 /.vs
+/build-win32
