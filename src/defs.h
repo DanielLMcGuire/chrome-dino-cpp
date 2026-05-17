@@ -27,8 +27,8 @@ inline constexpr const char* pressWav = "resources/sounds/button-press.mp3";
 inline constexpr const char* scoreWav = "resources/sounds/score-reached.mp3";
 #endif
 
-constexpr uint32_t INV_CANVAS = 0x535353;
-constexpr uint32_t DAY_CANVAS = 0xF7F7F7;
+constexpr uint32_t INV_CANVAS = 0x202124;
+constexpr uint32_t DAY_CANVAS = 0xFFFFFF;
 
 constexpr float INITIAL_SPEED        = 6.0f;
 constexpr float MAX_SPEED            = 13.0f;
