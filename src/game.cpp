@@ -326,10 +326,10 @@ void Game::restart() {
 
 void Game::clearCanvas() const {
     if (inverted_) {
-        static const auto [r, g, b, a] = HexToRGBA(INV_CANVAS);
+        const auto [r, g, b, a] = HexToRGBA(INV_CANVAS);
         SDL_SetRenderDrawColor(renderer_, r, g, b, a);
     } else {
-        static const auto [r, g, b, a] = HexToRGBA(DAY_CANVAS);
+        const auto [r, g, b, a] = HexToRGBA(DAY_CANVAS);
         SDL_SetRenderDrawColor(renderer_, r, g, b, a);
     }
     SDL_RenderClear(renderer_);

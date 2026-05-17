@@ -22,9 +22,9 @@ inline constexpr char* hitWav = "ms-appx:///resources/hit.mp3";
 inline constexpr char* pressWav = "ms-appx:///resources/button-press.mp3";
 inline constexpr char* scoreWav = "ms-appx:///resources/score-reached.mp3";
 #else
-inline constexpr char* hitWav = "resources/sounds/hit.mp3";
-inline constexpr char* pressWav = "resources/sounds/button-press.mp3";
-inline constexpr char* scoreWav = "resources/sounds/score-reached.mp3";
+inline constexpr const char* hitWav = "resources/sounds/hit.mp3";
+inline constexpr const char* pressWav = "resources/sounds/button-press.mp3";
+inline constexpr const char* scoreWav = "resources/sounds/score-reached.mp3";
 #endif
 
 constexpr uint32_t INV_CANVAS = 0x535353;
