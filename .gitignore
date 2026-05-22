@@ -3,3 +3,4 @@ build/
 highscore.dat
 /.vs
 /build-win32
+/build-uwp
