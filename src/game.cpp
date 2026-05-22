@@ -225,6 +225,11 @@ void Game::handleEvent(const SDL_Event& e) {
             case SDLK_ESCAPE:
                 running_ = false;
                 break;
+#ifndef NDEBUG
+            case SDLK_d:
+                debugCollisions_ = !debugCollisions_;
+                break;
+#endif
 
             case SDLK_UP:
             case SDLK_SPACE:
@@ -457,4 +462,77 @@ void Game::update() {
         distanceMeter_->update(deltaTime, (int)std::ceil(distanceRan_), inverted_);
         gameOverPanel_->update(deltaTime, inverted_);
     }
+
+#ifndef NDEBUG
+    if (debugCollisions_) {
+        drawDebugCollisions();
+    }
+#endif
 }
+
+#ifndef NDEBUG
+void Game::drawDebugCollisions() const {
+    if (horizon_->obstacles.empty()) return;
+    const auto& obs = *horizon_->obstacles[0];
+
+    CollisionBox tRexBox;
+    if (trex_->ducking) {
+        tRexBox = {
+            (int)trex_->xPos + 1,
+            (int)trex_->yPos + TREX_HEIGHT - TREX_HEIGHT_DUCK + 1,
+            TREX_WIDTH_DUCK - 2,
+            TREX_HEIGHT_DUCK - 2
+        };
+    } else {
+        tRexBox = {
+            (int)trex_->xPos + 1,
+            (int)trex_->yPos + 1,
+    CollisionBox obsBox = {
+        obs.typeConfig->width * obs.size - 2,
+    };
+
+    bool bigOverlap = boxesOverlap(tRexBox, obsBox);
+
+    auto drawBox = [&](const CollisionBox& b, uint32_t hex) {
+        const auto [r, g, b_, a] = HexToRGBA(hex);
+        SDL_SetRenderDrawColor(renderer_, r, g, b_, a);
+        SDL_Rect rect = { b.x, b.y, b.w, b.h };
+        SDL_RenderDrawRect(renderer_, &rect);
+    };
+
+    if (!bigOverlap) {
+        drawBox(tRexBox, DBG_COL_GREEN);
+        drawBox(obsBox, DBG_COL_GREEN);
+    } else {
+        drawBox(tRexBox, DBG_COL_YELLOW);
+        drawBox(obsBox, DBG_COL_YELLOW);
+
+        auto tRexBoxes = trex_->getCollisionBoxes();
+        for (const auto& tb : tRexBoxes) {
+            CollisionBox adjT = adjustedBox(tb, tRexBox);
+            bool collided = false;
+            for (const auto& ob : obs.collisionBoxes) {
+                CollisionBox adjO = adjustedBox(ob, obsBox);
+                if (boxesOverlap(adjT, adjO)) {
+                    collided = true;
+                    break;
+                }
+            }
+            drawBox(adjT, collided ? DBG_COL_RED : DBG_COL_GREEN);
+        }
+
+        for (const auto& ob : obs.collisionBoxes) {
+            CollisionBox adjO = adjustedBox(ob, obsBox);
+            bool collided = false;
+            for (const auto& tb : tRexBoxes) {
+                CollisionBox adjT = adjustedBox(tb, tRexBox);
+                if (boxesOverlap(adjT, adjO)) {
+                    collided = true;
+                    break;
+                }
+            }
+            drawBox(adjO, collided ? DBG_COL_RED : DBG_COL_GREEN);
+        }
+    }
+}
+#endif

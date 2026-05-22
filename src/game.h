@@ -111,4 +111,9 @@ private:
     void loadHighScore();
     /// @brief Save high score
     void saveHighScore();
+
+#ifndef NDEBUG
+    bool debugCollisions_ = true;
+    void drawDebugCollisions() const;
+#endif
 };

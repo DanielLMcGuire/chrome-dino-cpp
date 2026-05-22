@@ -30,6 +30,10 @@ inline constexpr const char* scoreWav = "resources/sounds/score-reached.mp3";
 constexpr uint32_t INV_CANVAS = 0x202124;
 constexpr uint32_t DAY_CANVAS = 0xFFFFFF;
 
+constexpr uint32_t DBG_COL_GREEN  = 0x00FF00;
+constexpr uint32_t DBG_COL_RED    = 0xFF0000;
+constexpr uint32_t DBG_COL_YELLOW = 0xFFFF00;
+
 constexpr float INITIAL_SPEED        = 6.0f;
 constexpr float MAX_SPEED            = 13.0f;
 constexpr float ACCELERATION         = 0.001f;
