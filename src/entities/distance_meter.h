@@ -38,7 +38,7 @@ public:
         for (int i = 0; i < maxUnits_; ++i) digits_.push_back('0');
     }
 
-    void setHighScore(int distance) {
+    void setHighScore(float distance) {
         int d = getActualDistance(distance);
         std::string s = std::string(maxUnits_, '0') + std::to_string(d);
         highScore_ = "HI " + s.substr(s.size() - maxUnits_);

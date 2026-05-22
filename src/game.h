@@ -79,7 +79,7 @@ private:
     /// @brief Night mode should trigger
     bool  invertTrigger_   = false;
     /// @brief High score
-    int   highestScore_    = 0;
+    float   highestScore_    = 0;
 
     Uint32 lastTime_       = 0;
     Uint32 crashTime_      = 0;

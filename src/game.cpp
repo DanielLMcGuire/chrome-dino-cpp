@@ -312,8 +312,8 @@ void Game::gameOver() {
     trex_->update(0.0f, TrexStatus::CRASHED);
     distanceMeter_->achievement = false;
 
-    if (distanceRan_ > (float)highestScore_) {
-        highestScore_ = (int)distanceRan_;
+    if (distanceRan_ > highestScore_) {
+        highestScore_ = distanceRan_;
         distanceMeter_->setHighScore(highestScore_);
         saveHighScore();
     }
@@ -487,8 +487,15 @@ void Game::drawDebugCollisions() const {
         tRexBox = {
             (int)trex_->xPos + 1,
             (int)trex_->yPos + 1,
+            TREX_WIDTH - 2,
+            TREX_HEIGHT - 2
+        };
+    }
     CollisionBox obsBox = {
+        (int)obs.xPos + 1,
+        (int)obs.yPos + 1,
         obs.typeConfig->width * obs.size - 2,
+        obs.typeConfig->height - 2
     };
 
     bool bigOverlap = boxesOverlap(tRexBox, obsBox);
