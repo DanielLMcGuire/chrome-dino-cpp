@@ -13,7 +13,12 @@ project(DinoGame CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(SDL_SHARED OFF CACHE BOOL "" FORCE)
+if(ANDROID)
+    set(SDL_SHARED ON CACHE BOOL "" FORCE)
+else()
+    set(SDL_SHARED OFF CACHE BOOL "" FORCE)
+endif()
+
 set(SDL_STATIC ON CACHE BOOL "" FORCE)
 
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
@@ -85,6 +90,8 @@ if(XBOX)
     set_property(SOURCE ${GAME_RESOURCES} PROPERTY VS_DEPLOYMENT_CONTENT 1)
     set_property(SOURCE ${GAME_RESOURCES} PROPERTY VS_DEPLOYMENT_LOCATION "resources")
 
+elseif(ANDROID)
+    list(APPEND SOURCES src/entry/main.cpp)
 else()
     list(APPEND SOURCES 
         src/entry/main.cpp
@@ -102,7 +109,11 @@ if(XBOX)
     )
 endif()
 
-add_executable(DinoGame ${SOURCES})
+if(ANDROID)
+    add_library(DinoGame SHARED ${SOURCES})
+else()
+    add_executable(DinoGame ${SOURCES})
+endif()
 
 target_include_directories(DinoGame PRIVATE src)
 
@@ -115,19 +126,34 @@ if(TESTS)
     target_compile_definitions(DinoGame PRIVATE AUTOPLAYER)
 endif()
 
-target_link_libraries(DinoGame PRIVATE
-    SDL2::SDL2-static
-    SDL2_image::SDL2_image-static
-    SDL2_mixer::SDL2_mixer-static
-)
+if(ANDROID)
+    target_link_libraries(DinoGame PRIVATE
+        SDL2::SDL2
+        SDL2_image::SDL2_image-static
+        SDL2_mixer::SDL2_mixer-static
+    )
+else()
+    target_link_libraries(DinoGame PRIVATE
+        SDL2::SDL2-static
+        SDL2_image::SDL2_image-static
+        SDL2_mixer::SDL2_mixer-static
+    )
+endif()
 
 if(XBOX)
     target_link_libraries(DinoGame PRIVATE WindowsApp.lib)
+elseif(ANDROID)
+    target_link_libraries(DinoGame PRIVATE SDL2::SDL2main log android GLESv1_CM GLESv2)
 else()
     target_link_libraries(DinoGame PRIVATE SDL2::SDL2main)
 endif()
 
-set_target_properties(DinoGame PROPERTIES WIN32_EXECUTABLE TRUE)
+if(NOT ANDROID)
+    set_target_properties(DinoGame PROPERTIES WIN32_EXECUTABLE TRUE)
+else()
+    set_target_properties(DinoGame PROPERTIES OUTPUT_NAME "main")
+endif()
+
 if(XBOX)
     set_target_properties(DinoGame PROPERTIES
         VS_WINDOWS_TARGET_PLATFORM_MIN_VERSION "10.0.17763.0"
@@ -136,7 +162,7 @@ if(XBOX)
     )
 endif()
 
-if(NOT XBOX)
+if(NOT XBOX AND NOT ANDROID)
     add_custom_command(TARGET DinoGame POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_directory
             "${CMAKE_SOURCE_DIR}/resources"

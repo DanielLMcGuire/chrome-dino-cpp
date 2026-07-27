@@ -25,7 +25,7 @@ public:
         calcX();
         defaultString_.assign(maxUnits_, '0');
         for (int i = 0; i < maxUnits_; ++i) {
-            maxScoreStr_ += "9";
+            maxScoreStr_ += '9';
         }
         maxScore_ = std::stoi(maxScoreStr_);
     }
@@ -51,7 +51,7 @@ public:
         hiFlashCount_    = 0;
     }
 
-    SDL_Rect getHighScoreRect() const {
+    [[nodiscard]] SDL_Rect getHighScoreRect() const {
         if (highScore_.empty()) return {0, 0, 0, 0};
         static constexpr int PAD = 4;
         int x = (x_ - maxUnits_ * 2 * CHAR_WIDTH) - PAD;
@@ -61,10 +61,10 @@ public:
     }
 
     void startHighScoreFlashing() { hiFlashing_ = true; hiFlashTimer_ = 0.0f; hiFlashCount_ = 0; }
-    bool isHighScoreFlashing()    const { return hiFlashing_; }
-    void cancelHighScoreFlashing()      { hiFlashing_ = false; }
+    [[nodiscard]] bool isHighScoreFlashing() const { return hiFlashing_; }
+    void cancelHighScoreFlashing() { hiFlashing_ = false; }
 
-    int getActualDistance(float distance) const {
+    [[nodiscard]] static int getActualDistance(float distance) {
         return distance > 0 ? (int)std::round(distance * COEFFICIENT) : 0;
     }
 
@@ -77,7 +77,7 @@ public:
 
             if (d > maxScore_ && maxUnits_ == MAX_UNITS) {
                 ++maxUnits_;
-                maxScoreStr_ += "9";
+                maxScoreStr_ += '9';
                 maxScore_     = std::stoi(maxScoreStr_);
             }
 

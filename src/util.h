@@ -10,7 +10,7 @@ inline SDL_Surface* createInvertedSurface(SDL_Surface* src) {
     SDL_Surface* conv = SDL_ConvertSurfaceFormat(src, SDL_PIXELFORMAT_RGBA32, 0);
     if (!conv) return nullptr;
     SDL_LockSurface(conv);
-    Uint8* px = (Uint8*)conv->pixels;
+    auto* px = (Uint8*)conv->pixels;
     for (int i = 0; i < conv->h; ++i) {
         for (int j = 0; j < conv->w; ++j) {
             Uint8* p = px + i * conv->pitch + j * 4;

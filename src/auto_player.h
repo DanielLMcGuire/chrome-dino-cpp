@@ -39,8 +39,8 @@ public:
 
         float x          = obs.xPos;
         float y          = obs.yPos;
-        float w          = (float)obs.width;
-        float obsHeight  = (float)obs.typeConfig->height;
+        auto  w          = (float)obs.width;
+        auto  obsHeight  = (float)obs.typeConfig->height;
         float yFromBottom = GAME_HEIGHT - y - obsHeight;
 
         bool isNearby = x < 25.0f * speed - w / 2.0f;

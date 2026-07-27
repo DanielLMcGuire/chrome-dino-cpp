@@ -58,13 +58,42 @@ void Game::loadHighScore() {
     std::wstring path(localFolder.Path().c_str());
     path += L"\\highscore.dat";
     std::ifstream f(path, std::ios::binary);
-#else
-    std::ifstream f("highscore.dat", std::ios::binary);
-#endif
     if (!f) return;
     f.read(reinterpret_cast<char*>(&highestScore_), sizeof(highestScore_));
     if (f && highestScore_ > 0)
         distanceMeter_->setHighScore(highestScore_);
+
+#elif defined(__ANDROID__)
+    const char* basePath =
+#if SDL_MAJOR_VERSION >= 3
+            SDL_GetAndroidInternalStoragePath();
+#else
+            SDL_AndroidGetInternalStoragePath();
+#endif
+
+    if (!basePath) {
+        return;
+    }
+
+    std::string path = std::string(basePath) + "/highscore.dat";
+    FILE* f = fopen(path.c_str(), "rb");
+    if (!f) {
+        return;
+    }
+
+    bool ok = fread(&highestScore_, sizeof(highestScore_), 1, f) == 1;
+    fclose(f);
+
+    if (ok && highestScore_ > 0)
+        distanceMeter_->setHighScore(highestScore_);
+
+#else
+    std::ifstream f("highscore.dat", std::ios::binary);
+    if (!f) return;
+    f.read(reinterpret_cast<char*>(&highestScore_), sizeof(highestScore_));
+    if (f && highestScore_ > 0)
+        distanceMeter_->setHighScore(highestScore_);
+#endif
 }
 
 void Game::saveHighScore() {
@@ -73,10 +102,33 @@ void Game::saveHighScore() {
     std::wstring path(localFolder.Path().c_str());
     path += L"\\highscore.dat";
     std::ofstream f(path, std::ios::binary | std::ios::trunc);
+    f.write(reinterpret_cast<const char*>(&highestScore_), sizeof(highestScore_));
+
+#elif defined(__ANDROID__)
+    const char* basePath =
+#if SDL_MAJOR_VERSION >= 3
+            SDL_GetAndroidInternalStoragePath();
+#else
+            SDL_AndroidGetInternalStoragePath();
+#endif
+
+    if (!basePath) {
+        return;
+    }
+
+    std::string path = std::string(basePath) + "/highscore.dat";
+    FILE* f = fopen(path.c_str(), "wb");
+    if (!f) {
+        return;
+    }
+
+    fwrite(&highestScore_, sizeof(highestScore_), 1, f);
+    fclose(f);
+
 #else
     std::ofstream f("highscore.dat", std::ios::binary | std::ios::trunc);
-#endif
     f.write(reinterpret_cast<const char*>(&highestScore_), sizeof(highestScore_));
+#endif
 }
 
 void Game::playSound(Mix_Chunk* chunk) {

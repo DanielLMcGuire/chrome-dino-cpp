@@ -92,5 +92,3 @@ struct ObstacleTypeDef {
     int   numFrames;
     float frameRate;
 };
-
-inline bool IS_HIDPI = false;

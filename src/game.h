@@ -24,14 +24,14 @@ public:
     void update();
 
     /// @brief `running_` getter
-    bool isRunning() const { return running_; }
+    [[nodiscard]] bool isRunning() const { return running_; }
 
     /// @brief `trex_` getter
     Trex*    getTrex()         { return trex_.get(); }
     /// @brief `horizon_` getter
     Horizon* getHorizon()      { return horizon_.get(); }
     /// @brief `currentSpeed_` getter
-    float    getCurrentSpeed() { return currentSpeed_; }
+    [[nodiscard]] float    getCurrentSpeed() const { return currentSpeed_; }
 
 private:
     /// @brief SDL Renderer
@@ -98,7 +98,7 @@ private:
     /// @brief Clear the canvas
     void clearCanvas() const;
     /// @brief Check for collisions
-    bool checkCollision() const;
+    [[nodiscard]] bool checkCollision() const;
     /// @brief Play a sound effect
     void playSound(Mix_Chunk* chunk);
     /// @brief Load sound effects

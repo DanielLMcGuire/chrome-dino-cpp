@@ -108,8 +108,8 @@ void Obstacle::cloneCollisionBoxes() {
 }
 
 float Obstacle::getGap(float speed) const {
-    float minGap = std::round(width * speed
-                              + typeConfig->minGap * GAP_COEFFICIENT);
+    float minGap = std::round((float)width * speed
+                              + (float)typeConfig->minGap * GAP_COEFFICIENT);
     float maxGap = std::round(minGap * MAX_GAP_COEFFICIENT);
     return (float)randInt((int)minGap, (int)maxGap);
 }

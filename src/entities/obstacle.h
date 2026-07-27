@@ -22,7 +22,7 @@ public:
     void update(float deltaTime, float speed, bool night);
     void draw(bool night) const;
 
-    bool isVisible() const { return xPos + width > 0.0f; }
+    [[nodiscard]] bool isVisible() const { return xPos + (float)width > 0.0f; }
 
     std::vector<CollisionBox> collisionBoxes;
 
@@ -36,6 +36,6 @@ private:
     float frameTimer_   = 0.0f;
 
     void  init(float speed);
-    float getGap(float speed) const;
+    [[nodiscard]] float getGap(float speed) const;
     void  cloneCollisionBoxes();
 };

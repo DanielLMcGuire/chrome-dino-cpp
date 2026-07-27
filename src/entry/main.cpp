@@ -93,13 +93,9 @@ int SDL_main(int /*argc*/, char* /*argv*/[]) {
 
     int drawW = 0, drawH = 0;
     SDL_GetRendererOutputSize(renderer, &drawW, &drawH);
-    IS_HIDPI = (drawW > WINDOW_WIDTH);
-
     SDL_RenderSetLogicalSize(renderer, GAME_WIDTH, GAME_HEIGHT);
 
-    const char* spritePath = IS_HIDPI
-        ? "resources/images/default_200_percent/offline/200-offline-sprite.png"
-        : "resources/images/default_100_percent/offline/100-offline-sprite.png";
+    const char* spritePath = "resources/images/default_100_percent/offline/100-offline-sprite.png";
 
     SDL_Surface* surf = IMG_Load(spritePath);
     if (!surf) {

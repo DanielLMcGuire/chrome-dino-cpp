@@ -104,7 +104,7 @@ private:
             if (last->followingObstacleCreated) return;
 
             bool readyToSpawn =
-                last->xPos + last->width + last->gap < GAME_WIDTH;
+                last->xPos + (float)last->width + last->gap < GAME_WIDTH;
             if (readyToSpawn) {
                 last->followingObstacleCreated = true;
                 addNewObstacle(speed);
@@ -112,7 +112,7 @@ private:
         }
     }
 
-    bool duplicateObstacleCheck(const std::string& type) const {
+    [[nodiscard]] bool duplicateObstacleCheck(const std::string& type) const {
         int count = 0;
         for (const auto& h : obstacleHistory_)
             count = (h == type) ? count + 1 : 0;

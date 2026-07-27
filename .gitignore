@@ -4,3 +4,6 @@ highscore.dat
 /.vs
 /build-win32
 /build-uwp
+/android-build/.gradle
+/android-build/.idea
+/android-build/app/.cxx

@@ -28,7 +28,7 @@ public:
     void setDuck(bool isDucking);
     void reset();
 
-    std::vector<CollisionBox> getCollisionBoxes() const;
+    [[nodiscard]] std::vector<CollisionBox> getCollisionBoxes() const;
 
 private:
     SDL_Renderer* renderer_;

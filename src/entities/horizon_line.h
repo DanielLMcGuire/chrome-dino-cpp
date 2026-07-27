@@ -64,7 +64,7 @@ private:
         }
     }
 
-    int getRandomType() const {
+    [[nodiscard]] static int getRandomType() {
         return randFloat() > 0.5f ? SRC_X0 + SEG_WIDTH : SRC_X0;
     }
 };

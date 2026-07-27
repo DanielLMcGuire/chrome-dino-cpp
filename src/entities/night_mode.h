@@ -67,7 +67,7 @@ private:
     struct Star { float x, y; int srcY; };
     Star stars_[NUM_STARS] = {};
 
-    float updateX(float cur, float speed) {
+    static float updateX(float cur, float speed) {
         if (cur < -(float)WIDTH) return (float)GAME_WIDTH;
         return cur - speed;
     }
@@ -83,7 +83,7 @@ private:
 
     void draw(bool night) const {
         SDL_Texture* tex = night ? spriteInv_ : sprite_;
-        Uint8 alpha = (Uint8)(opacity_ * 255.0f);
+        auto alpha = (Uint8)(opacity_ * 255.0f);
         SDL_SetTextureAlphaMod(tex, alpha);
 
         if (drawStars_) {

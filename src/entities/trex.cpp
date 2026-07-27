@@ -89,7 +89,7 @@ void Trex::draw(bool night) const {
 }
 
 void Trex::blink(Uint32 now, float deltaTime, bool night) {
-    float elapsed = (float)(now - animStartTime_);
+    auto elapsed = (float)(now - animStartTime_);
     if (elapsed >= blinkDelay_ && blinkCount < MAX_BLINK_COUNT) {
         frameTimer_ += deltaTime;
         if (frameTimer_ >= ANIM_FRAMES[(int)TrexStatus::WAITING].msPerFrame) {
