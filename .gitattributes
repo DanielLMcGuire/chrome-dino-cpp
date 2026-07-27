@@ -1,1 +1,2 @@
 android-build/**/* linguist-detectable=false
+src/**/*.h linguist-language=C++
