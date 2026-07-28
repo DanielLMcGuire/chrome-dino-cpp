@@ -19,3 +19,5 @@ There are configs for both UWP (Xbox) and win32/posix. (use -DXBOX=ON to enable 
 
 - System for seasonal themes (e.g. custom floating objects, custom obstacles, custom collectables)
 - Accessibility features (e.g. synthesized obstacle warning, slow game mode)
+---
+To build for Android, open the android-build folder in Android Studio. Once inside, allow the project to load. Then set the variant to `Release`. Use `Build` -> `Build APKs` to build the APK file. Finally, click `locate` inside the popup.
