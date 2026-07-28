@@ -5,5 +5,10 @@ highscore.dat
 /build-win32
 /build-uwp
 /android-build/.gradle
+*.apk
+*.so
 /android-build/.idea
 /android-build/app/.cxx
+/external/libtiff
+/external/zlib
+/android-build/local.properties
