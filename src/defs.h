@@ -13,18 +13,21 @@ constexpr int GAME_WIDTH  = 600;
 constexpr int GAME_HEIGHT = 150;
 extern int WINDOW_WIDTH;
 extern int WINDOW_HEIGHT;
-
-constexpr int FPS = 60; // Fallback
+#ifdef __PS2__
+constexpr float FPS = 59.94f;
+#else
+constexpr int FPS = 60;
+#endif
 extern float MS_PER_FRAME;
 
 #ifdef UWP
-inline constexpr char* hitWav = "ms-appx:///resources/hit.mp3";
-inline constexpr char* pressWav = "ms-appx:///resources/button-press.mp3";
-inline constexpr char* scoreWav = "ms-appx:///resources/score-reached.mp3";
-#else
-inline constexpr const char* hitWav = "resources/sounds/hit.mp3";
-inline constexpr const char* pressWav = "resources/sounds/button-press.mp3";
-inline constexpr const char* scoreWav = "resources/sounds/score-reached.mp3";
+inline constexpr char* hitWav = "ms-appx:///resources/hit.wav";
+inline constexpr char* pressWav = "ms-appx:///resources/button-press.wav";
+inline constexpr char* scoreWav = "ms-appx:///resources/score-reached.wav";
+#elif !defined(__PS2__)
+inline constexpr const char* hitWav = "resources/sounds/hit.wav";
+inline constexpr const char* pressWav = "resources/sounds/button-press.wav";
+inline constexpr const char* scoreWav = "resources/sounds/score-reached.wav";
 #endif
 
 constexpr uint32_t INV_CANVAS = 0x202124;

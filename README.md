@@ -3,15 +3,15 @@
 [![preview](screens/video.gif)](screens/video.mp4)
 <sub>(Click for uncompressed video, do note capture **lags** a bit more than usual)</sub>
 
-There are configs for both UWP (Xbox) and win32/posix. (use -DXBOX=ON to enable UWP)
+There are configs for both UWP (Xbox), PS2, and win32/posix. (use -DXBOX=ON to enable UWP)
 
 ## Keybinds
 
 |Control|Keyboard|Gamepad|
 |--:|:-:|:--|
-|JUMP|`UP`, `SPACE`|`A`|
-|DUCK|`DOWN`|`X`|
-|START/RESTART|`ENTER`|`≡`|
+|JUMP|`UP`, `SPACE`|`A`/Cross|
+|DUCK|`DOWN`|`X`/Square|
+|START/RESTART|`ENTER`|`≡`/Start|
 |EXIT|`ESCAPE`|N/A|
 |Clear high score|Double-click `HI`|`LB`|
 
@@ -21,3 +21,21 @@ There are configs for both UWP (Xbox) and win32/posix. (use -DXBOX=ON to enable 
 - Accessibility features (e.g. synthesized obstacle warning, slow game mode)
 ---
 To build for Android, open the android-build folder in Android Studio. Once inside, allow the project to load. Then set the variant to `Release`. Use `Build` -> `Build APKs` to build the APK file. Finally, click `locate` inside the popup.
+
+PS2 build:
+
+```bash
+export PS2DEV=$HOME/ps2dev
+export PS2SDK=$PS2DEV/ps2sdk
+export GSKIT=$PS2DEV/gsKit
+export PATH=$PATH:$PS2DEV/bin:$PS2DEV/ee/bin:$PS2DEV/iop/bin:$PS2DEV/dvp/bin:$PS2SDK/bin
+mkdir -p $PS2DEV
+curl -o ps2dev-latest.tar.gz -LC - \
+  https://github.com/ps2dev/ps2dev/releases/download/latest/ps2dev-ubuntu-latest.tar.gz
+tar -xf ps2dev-latest.tar.gz --strip-components 1 -C $PS2DEV
+python3 tools/embed_assets.py
+cmake -B build-ps2 -DPS2=ON -DCMAKE_TOOLCHAIN_FILE=$PS2SDK/ps2dev.cmake \
+  -DCMAKE_BUILD_TYPE=Release
+cmake --build build-ps2 -j$(nproc)
+# pcsx2 build-ps2/DinoGame.elf
+```

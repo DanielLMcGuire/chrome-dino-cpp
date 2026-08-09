@@ -7,6 +7,10 @@
 #ifdef __ANDROID__
 #include <android/log.h>
 #endif
+#ifdef __PS2__
+#include "ps2_assets.h"
+#include "ps2/sdl_joypad.h"
+#endif
 #include <cmath>
 #include <algorithm>
 #include <fstream>
@@ -29,6 +33,9 @@ Game::~Game() {
     if (sndPress_) Mix_FreeChunk(sndPress_);
     if (sndScore_) Mix_FreeChunk(sndScore_);
     if (gamepad_)  SDL_GameControllerClose(gamepad_);
+#ifdef __PS2__
+    if (joystick_) SDL_JoystickClose(joystick_);
+#endif
 }
 
 void Game::loadSounds() {
@@ -48,6 +55,10 @@ void Game::loadSounds() {
         SDL_RWops* rw = SDL_RWFromMem(bytes.data(), (int)bytes.size());
         sndScore_ = Mix_LoadWAV_RW(rw, 1);
     }
+#elif defined(__PS2__)
+    sndHit_   = Mix_LoadWAV_RW(SDL_RWFromConstMem(SND_HIT,   SND_HIT_len),   1);
+    sndPress_ = Mix_LoadWAV_RW(SDL_RWFromConstMem(SND_PRESS, SND_PRESS_len), 1);
+    sndScore_ = Mix_LoadWAV_RW(SDL_RWFromConstMem(SND_SCORE, SND_SCORE_len), 1);
 #else
     sndHit_   = Mix_LoadWAV(hitWav);
     sndPress_ = Mix_LoadWAV(pressWav);
@@ -89,7 +100,14 @@ void Game::loadHighScore() {
 
     if (ok && highestScore_ > 0)
         distanceMeter_->setHighScore(highestScore_);
-
+#elif __PCSX2__
+    std::ifstream f("dinogame_ps2_highscore.dat", std::ios::binary);
+    if (!f) return;
+    f.read(reinterpret_cast<char*>(&highestScore_), sizeof(highestScore_));
+    if (f && highestScore_ > 0)
+        distanceMeter_->setHighScore(highestScore_);
+#elif __PS2__
+    return;
 #else
     std::ifstream f("highscore.dat", std::ios::binary);
     if (!f) return;
@@ -127,7 +145,11 @@ void Game::saveHighScore() {
 
     fwrite(&highestScore_, sizeof(highestScore_), 1, f);
     fclose(f);
-
+#elif __PCSX2__
+    std::ofstream f("dinogame_ps2_highscore.dat", std::ios::binary | std::ios::trunc);
+    f.write(reinterpret_cast<const char*>(&highestScore_), sizeof(highestScore_));
+#elif __PS2__
+    return;
 #else
     std::ofstream f("highscore.dat", std::ios::binary | std::ios::trunc);
     f.write(reinterpret_cast<const char*>(&highestScore_), sizeof(highestScore_));
@@ -139,6 +161,75 @@ void Game::playSound(Mix_Chunk* chunk) {
 }
 
 void Game::pollGamepad() {
+#ifdef __PS2__
+    if (joystick_) {
+        constexpr int BTN_JUMP           = ps2sdl::PS2SDL_CROSS;
+        constexpr int BTN_DUCK           = ps2sdl::PS2SDL_SQUARE;
+        constexpr int BTN_RESTART        = ps2sdl::PS2SDL_START;
+        constexpr int BTN_CLEAR_HISCORE  = ps2sdl::PS2SDL_L1;
+
+        auto pressed = [&](int idx) -> bool {
+            return SDL_JoystickGetButton(joystick_, idx) != 0;
+        };
+        auto rising  = [&](int idx) { return  pressed(idx) && !padPrev_[idx]; };
+        auto falling = [&](int idx) { return !pressed(idx) &&  padPrev_[idx]; };
+
+        if (rising(BTN_JUMP)) {
+            if (state_ == GameState::WAITING || state_ == GameState::PLAYING) {
+                if (!keyJump_) {
+                    keyJump_ = true;
+                    if (state_ == GameState::WAITING) startGame();
+                    if (!trex_->jumping && !trex_->ducking) {
+                        playSound(sndPress_);
+                        trex_->startJump(currentSpeed_);
+                    }
+                }
+            } else if (state_ == GameState::GAME_OVER) {
+                if (SDL_GetTicks() - crashTime_ >= GAMEOVER_CLEAR_TIME) restart();
+            }
+        }
+        if (falling(BTN_JUMP)) {
+            keyJump_ = false;
+            trex_->endJump();
+        }
+
+        if (rising(BTN_DUCK)) {
+            if (!keyDuck_ && state_ == GameState::PLAYING) {
+                keyDuck_ = true;
+                if (trex_->jumping)                          trex_->setSpeedDrop();
+                else if (!trex_->jumping && !trex_->ducking) trex_->setDuck(true);
+            }
+        }
+        if (falling(BTN_DUCK)) {
+            keyDuck_         = false;
+            trex_->speedDrop = false;
+            trex_->setDuck(false);
+        }
+
+        if (rising(BTN_RESTART)) {
+            if (state_ == GameState::WAITING) startGame();
+            if (state_ == GameState::GAME_OVER) restart();
+        }
+
+        if (rising(BTN_CLEAR_HISCORE) && state_ == GameState::GAME_OVER) {
+            Uint32 elapsed = SDL_GetTicks() - crashTime_;
+            if (elapsed >= GAMEOVER_CLEAR_TIME) {
+                if (distanceMeter_->isHighScoreFlashing()) {
+                    highestScore_ = 0;
+                    saveHighScore();
+                    distanceMeter_->resetHighScore();
+                } else {
+                    distanceMeter_->startHighScoreFlashing();
+                }
+            }
+        }
+
+        for (int i = 0; i < (int)padPrev_.size(); ++i)
+            padPrev_[i] = pressed(i);
+        return;
+    }
+#endif
+
     if (!gamepad_) return;
 
     constexpr SDL_GameControllerButton BTN_JUMP    = SDL_CONTROLLER_BUTTON_A;
@@ -214,6 +305,17 @@ void Game::handleEvent(const SDL_Event& e) {
         running_ = false;
         return;
     }
+#ifdef __PS2__
+    if (e.type == SDL_JOYDEVICEADDED && !joystick_) {
+        joystick_ = SDL_JoystickOpen(e.jdevice.which);
+    }
+    if (e.type == SDL_JOYDEVICEREMOVED && joystick_) {
+        if (SDL_JoystickInstanceID(joystick_) == e.jdevice.which) {
+            SDL_JoystickClose(joystick_);
+            joystick_ = nullptr;
+        }
+    }
+#endif
     if (e.type == SDL_CONTROLLERDEVICEADDED && !gamepad_) {
         gamepad_ = SDL_GameControllerOpen(e.cdevice.which);
     }

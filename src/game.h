@@ -88,6 +88,9 @@ private:
     SDL_GameController* gamepad_     = nullptr;
     /// @brief Previous gamepad state
     std::array<bool, 16> padPrev_    = {};
+#ifdef __PS2__
+    SDL_Joystick* joystick_ = nullptr;
+#endif
 
     /// @brief Start the game
     void startGame();
