@@ -33,7 +33,6 @@ mkdir -p $PS2DEV
 curl -o ps2dev-latest.tar.gz -LC - \
   https://github.com/ps2dev/ps2dev/releases/download/latest/ps2dev-ubuntu-latest.tar.gz
 tar -xf ps2dev-latest.tar.gz --strip-components 1 -C $PS2DEV
-python3 tools/embed_assets.py
 cmake -B build-ps2 -DPS2=ON -DCMAKE_TOOLCHAIN_FILE=$PS2SDK/ps2dev.cmake \
   -DCMAKE_BUILD_TYPE=Release
 cmake --build build-ps2 -j$(nproc)
