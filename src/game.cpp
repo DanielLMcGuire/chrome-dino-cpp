@@ -502,6 +502,9 @@ void Game::restart() {
 }
 
 void Game::clearCanvas() const {
+    SDL_SetRenderDrawColor(renderer_, 0, 0, 0, 255);
+    SDL_RenderClear(renderer_);
+
     if (inverted_) {
         const auto [r, g, b, a] = HexToRGBA(INV_CANVAS);
         SDL_SetRenderDrawColor(renderer_, r, g, b, a);
@@ -509,7 +512,8 @@ void Game::clearCanvas() const {
         const auto [r, g, b, a] = HexToRGBA(DAY_CANVAS);
         SDL_SetRenderDrawColor(renderer_, r, g, b, a);
     }
-    SDL_RenderClear(renderer_);
+    SDL_Rect logicalArea = {0, 0, GAME_WIDTH, GAME_HEIGHT};
+    SDL_RenderFillRect(renderer_, &logicalArea);
 }
 
 void Game::handleNightMode(float deltaTime) {

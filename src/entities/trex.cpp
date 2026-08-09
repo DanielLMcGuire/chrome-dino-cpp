@@ -35,7 +35,7 @@ void Trex::setBlinkDelay() {
     blinkDelay_ = std::ceil(randFloat() * 7000.0f);
 }
 
-void Trex::update(float deltaTime, TrexStatus newStatus, bool night) {
+void Trex::update(float deltaTime, TrexStatus newStatus, bool night, bool draw) {
     animTimer_ += deltaTime;
 
     if (newStatus != TrexStatus(-1) && newStatus != status) {
@@ -49,10 +49,14 @@ void Trex::update(float deltaTime, TrexStatus newStatus, bool night) {
     }
 
     if (status == TrexStatus::WAITING) {
-        blink(SDL_GetTicks(), deltaTime, night);
+        if (draw) {
+            blink(SDL_GetTicks(), deltaTime, night);
+        }
     } else {
         const auto& fi = ANIM_FRAMES[(int)status];
-        drawFrame(fi.frames[currentFrame_], 0, night);
+        if (draw) {
+            drawFrame(fi.frames[currentFrame_], 0, night);
+        }
 
         frameTimer_ += deltaTime;
         if (frameTimer_ >= fi.msPerFrame) {
@@ -63,7 +67,7 @@ void Trex::update(float deltaTime, TrexStatus newStatus, bool night) {
 
     if (speedDrop && (int)yPos == groundYPos_) {
         speedDrop = false;
-        setDuck(true);
+        setDuck(true, draw);
     }
 }
 
@@ -156,12 +160,12 @@ void Trex::setSpeedDrop() {
     jumpVelocity_ = 1.0f;
 }
 
-void Trex::setDuck(bool isDucking) {
+void Trex::setDuck(bool isDucking, bool draw) {
     if (isDucking && status != TrexStatus::DUCKING) {
-        update(0.0f, TrexStatus::DUCKING);
+        update(0.0f, TrexStatus::DUCKING, false, draw);
         ducking = true;
     } else if (status == TrexStatus::DUCKING) {
-        update(0.0f, TrexStatus::RUNNING);
+        update(0.0f, TrexStatus::RUNNING, false, draw);
         ducking = false;
     }
 }
@@ -172,7 +176,14 @@ void Trex::reset() {
     jumpVelocity_ = 0.0f;
     jumping       = false;
     ducking       = false;
-    update(0.0f, TrexStatus::RUNNING);
+    // draw=false: this reset() can happen mid-frame (e.g. landing from a
+    // jump, inside Trex::updateJump()), and the caller (Game::update())
+    // always performs its own full trex_->update() draw later in that
+    // same frame. Drawing here too would blit the (alpha-blended) sprite
+    // twice in one frame, which is harmless on most backends but shows
+    // up as a visible flicker on PS2. The status/frame-index state still
+    // needs to be reset here, so we keep the call, just without the draw.
+    update(0.0f, TrexStatus::RUNNING, false, false);
     speedDrop     = false;
     jumpCount     = 0;
 }

@@ -18,14 +18,14 @@ public:
 
     Trex(SDL_Renderer* renderer, SDL_Texture* sprite, SDL_Texture* spriteInv);
 
-    void update(float deltaTime, TrexStatus newStatus = TrexStatus(-1), bool night = false);
+    void update(float deltaTime, TrexStatus newStatus = TrexStatus(-1), bool night = false, bool draw = true);
     void updateJump(float deltaTime);
     void draw(bool night = false) const;
 
     void startJump(float speed);
     void endJump();
     void setSpeedDrop();
-    void setDuck(bool isDucking);
+    void setDuck(bool isDucking, bool draw = true);
     void reset();
 
     [[nodiscard]] std::vector<CollisionBox> getCollisionBoxes() const;
