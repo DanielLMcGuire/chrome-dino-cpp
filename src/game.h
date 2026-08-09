@@ -100,7 +100,7 @@ private:
     /// @brief Check for collisions
     [[nodiscard]] bool checkCollision() const;
     /// @brief Play a sound effect
-    void playSound(Mix_Chunk* chunk);
+    static void playSound(Mix_Chunk* chunk);
     /// @brief Load sound effects
     void loadSounds();
     /// @brief Handle night mode (inverted colors)

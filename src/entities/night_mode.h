@@ -105,4 +105,4 @@ private:
     }
 };
 
-constexpr int NightMode::PHASES[7];
+constexpr int NightMode::PHASES[7]; // NOLINT

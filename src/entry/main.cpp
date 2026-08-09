@@ -13,6 +13,8 @@
 #include "defs.h"
 #include "game.h"
 
+#define AUTOPLAYER 1
+
 #ifdef AUTOPLAYER
 #include "auto_player.h"
 #endif
@@ -22,7 +24,7 @@ int   WINDOW_HEIGHT = GAME_HEIGHT * 2;
 float MS_PER_FRAME  = 1000.0f / FPS;
 
 int SDL_main(int /*argc*/, char* /*argv*/[]) {
-    std::srand((unsigned)std::time(nullptr));
+    std::srand((unsigned)std::time(nullptr)); // NOLINT
 
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_GAMECONTROLLER) < 0) {
 #ifdef _WIN32
@@ -69,6 +71,10 @@ int SDL_main(int /*argc*/, char* /*argv*/[]) {
         SDL_Quit();
         return 1;
     }
+
+#if defined(__ANDROID__)
+    SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN);
+#endif
 
     SDL_Renderer* renderer = SDL_CreateRenderer(
         window, -1,

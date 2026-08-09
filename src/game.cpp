@@ -4,6 +4,9 @@
 #include <winrt/Windows.Foundation.h>
 #include <winrt/Windows.Storage.h>
 #endif
+#ifdef __ANDROID__
+#include <android/log.h>
+#endif
 #include <cmath>
 #include <algorithm>
 #include <fstream>
@@ -346,6 +349,9 @@ void Game::handleEvent(const SDL_Event& e) {
 }
 
 void Game::startGame() {
+#if defined(__ANDROID__) && defined(AUTOPLAYER)
+    __android_log_print(ANDROID_LOG_DEBUG, "Game", "Starting game");
+#endif
     state_        = GameState::PLAYING;
     runningTime_  = 0.0f;
     distanceRan_  = 0.0f;
@@ -369,9 +375,15 @@ void Game::gameOver() {
         distanceMeter_->setHighScore(highestScore_);
         saveHighScore();
     }
+    
+#if defined(__ANDROID__)
+    int actualDistanceRan = DistanceMeter::getActualDistance(distanceRan_);
+    __android_log_print(ANDROID_LOG_DEBUG, (std::string("Game::") + std::string(__func__)).c_str(), "Game over at %fmeters. Score is %d.", distanceRan_, actualDistanceRan);
+#endif
 }
 
 void Game::restart() {
+
     state_        = GameState::PLAYING;
     runningTime_  = 0.0f;
     distanceRan_  = 0.0f;
@@ -406,7 +418,7 @@ void Game::handleNightMode(float deltaTime) {
     } else if (invertTimer_ > 0.0f) {
         invertTimer_ += deltaTime;
     } else {
-        int actualDist = distanceMeter_->getActualDistance(distanceRan_);
+        int actualDist = DistanceMeter::getActualDistance(distanceRan_);
         if (actualDist > 0) {
             invertTrigger_ = (actualDist % (int)INVERT_DISTANCE == 0);
             if (invertTrigger_ && invertTimer_ == 0.0f) {
@@ -421,7 +433,7 @@ bool Game::checkCollision() const {
     if (horizon_->obstacles.empty()) return false;
     const auto& obs = *horizon_->obstacles[0];
 
-    CollisionBox tRexBox;
+    CollisionBox tRexBox{};
     if (trex_->ducking) {
         tRexBox = {
             (int)trex_->xPos + 1,
@@ -461,7 +473,7 @@ void Game::update() {
     pollGamepad();
 
     Uint32 now       = SDL_GetTicks();
-    float  deltaTime = (float)(now - lastTime_);
+    auto  deltaTime = (float)(now - lastTime_);
     if (deltaTime > MS_PER_FRAME * 5.0f) deltaTime = MS_PER_FRAME;
     lastTime_        = now;
 

@@ -70,4 +70,4 @@ private:
     float animTimer_    = 0.0f;
 };
 
-constexpr int GameOverPanel::FRAMES[GameOverPanel::NUM_FRAMES];
+constexpr int GameOverPanel::FRAMES[GameOverPanel::NUM_FRAMES]; // NOLINT
