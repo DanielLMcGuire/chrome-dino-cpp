@@ -9,11 +9,11 @@ There are configs for both UWP (Xbox), PS2, and win32/posix. (use -DXBOX=ON to e
 
 |Control|Keyboard|Gamepad|
 |--:|:-:|:--|
-|JUMP|`UP`, `SPACE`|`A`/Cross|
-|DUCK|`DOWN`|`X`/Square|
-|START/RESTART|`ENTER`|`≡`/Start|
+|JUMP|`UP`, `SPACE`|`A`/`Cross`|
+|DUCK|`DOWN`|`X`/`Square`|
+|START/RESTART|`ENTER`|`≡`/`Start`|
 |EXIT|`ESCAPE`|N/A|
-|Clear high score|Double-click `HI`|`LB`|
+|Clear high score|Double-click `HI`|`LB`/`L1`|
 
 ## Missing features from the original
 
