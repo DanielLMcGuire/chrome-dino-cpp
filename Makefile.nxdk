@@ -1,0 +1,35 @@
+NXDK_DIR := $(CURDIR)/../nxdk
+
+XBE_TITLE := DinoGame
+GEN_XISO  := DinoGame.iso
+
+NXDK_SDL_IMAGE_DIR ?= $(NXDK_DIR)/lib/sdl/SDL2_image
+
+XBOX_ASSETS_HEADER := $(CURDIR)/xbox_assets.h
+
+SRCS = \
+	$(CURDIR)/src/game.cpp \
+	$(CURDIR)/src/entities/obstacle.cpp \
+	$(CURDIR)/src/entities/trex.cpp \
+	$(CURDIR)/src/entry/main-xbox.cpp
+
+NXDK_CXX = y
+NXDK_SDL = y
+
+NXDK_CFLAGS   += -D__XBOX__ -I$(CURDIR)/src -I$(CURDIR) \
+	-I$(NXDK_SDL_IMAGE_DIR)/include
+NXDK_CXXFLAGS += -D__XBOX__ -I$(CURDIR)/src -I$(CURDIR) \
+	-I$(NXDK_SDL_IMAGE_DIR)/include -std=c++20
+
+include $(NXDK_DIR)/Makefile
+
+$(XBOX_ASSETS_HEADER):
+	@echo "[ ASSETS   ] $@"
+	$(VE)python3 "$(CURDIR)/tools/embed_assets.py" --xbox --output "$@"
+
+$(CURDIR)/src/game.obj $(CURDIR)/src/entry/main-xbox.obj: $(XBOX_ASSETS_HEADER)
+
+CLEANRULES += clean-xbox-assets
+.PHONY: clean-xbox-assets
+clean-xbox-assets:
+	rm -f "$(XBOX_ASSETS_HEADER)"

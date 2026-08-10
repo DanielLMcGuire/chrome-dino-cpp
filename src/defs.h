@@ -1,5 +1,9 @@
 #pragma once
+#ifdef __XBOX__
+#include <SDL.h>
+#else
 #include <SDL2/SDL.h>
+#endif
 #include <vector>
 #include <string>
 #include <cmath>

@@ -2,7 +2,11 @@
 #include "defs.h"
 #include "rand.h"
 #include <cstdint>
+#ifdef __XBOX__
+#include <SDL.h>
+#else
 #include <SDL2/SDL.h>
+#endif
 
 const ObstacleTypeDef& getCactusSmallDef();
 const ObstacleTypeDef& getCactusLargeDef();

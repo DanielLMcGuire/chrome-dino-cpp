@@ -5,8 +5,12 @@
 #include "entities/distance_meter.h"
 #include "entities/game_over_panel.h"
 
-#include <SDL_mixer.h>
+#ifdef __XBOX__
+#include <SDL.h>
+#else
 #include <SDL2/SDL.h>
+#include <SDL_mixer.h>
+#endif
 #include <memory>
 #include <array>
 #include <cstdint>
@@ -50,14 +54,14 @@ private:
     std::unique_ptr<DistanceMeter>distanceMeter_;
     /// @brief Game over panel
     std::unique_ptr<GameOverPanel>gameOverPanel_;
-
+#ifndef __XBOX__
     /// @brief Hit (colision) sound
     Mix_Chunk* sndHit_   = nullptr;
     /// @brief Button press sound
     Mix_Chunk* sndPress_ = nullptr;
     /// @brief +100 score sound
     Mix_Chunk* sndScore_ = nullptr;
-
+#endif
     /// @brief Game state
     GameState state_       = GameState::WAITING;
     /// @brief Game is running
@@ -103,8 +107,10 @@ private:
     void clearCanvas() const;
     /// @brief Check for collisions
     [[nodiscard]] bool checkCollision() const;
+#ifndef __XBOX__
     /// @brief Play a sound effect
     static void playSound(Mix_Chunk* chunk);
+#endif
     /// @brief Load sound effects
     void loadSounds();
     /// @brief Handle night mode (inverted colors)

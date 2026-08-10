@@ -1,0 +1,164 @@
+#ifdef __XBOX__
+#include <SDL.h>
+#else
+#include <SDL2/SDL.h>
+#endif
+#include <SDL_image.h>
+
+extern "C" {
+#include <hal/debug.h>
+#include <hal/video.h>
+#include <hal/xbox.h>
+}
+
+#include <cstdlib>
+
+#include "defs.h"
+#include "game.h"
+#include "util.h"
+#include "xbox_assets.h"
+
+#ifdef AUTOPLAYER
+#include "auto_player.h"
+#endif
+
+int   WINDOW_WIDTH  = 640;
+int   WINDOW_HEIGHT = 480;
+float MS_PER_FRAME  = 1000.0f / FPS;
+
+namespace {
+
+void logError(const char* what, const char* detail) {
+    debugPrint("%s: %s\n", what, detail);
+}
+
+SDL_Texture* loadSpriteTexture(SDL_Renderer* renderer) {
+    SDL_Surface* surf = IMG_Load_RW(SDL_RWFromConstMem(SPRITE_SHEET, (int)SPRITE_SHEET_len), 1);
+    if (!surf) {
+        logError("Sprite decode error", IMG_GetError());
+        return nullptr;
+    }
+    SDL_Texture* tex = SDL_CreateTextureFromSurface(renderer, surf);
+    if (tex) {
+        SDL_SetTextureBlendMode(tex, SDL_BLENDMODE_BLEND);
+    } else {
+        logError("Sprite texture error", SDL_GetError());
+    }
+    SDL_FreeSurface(surf);
+    return tex;
+}
+
+SDL_Texture* loadInvertedSpriteTexture(SDL_Renderer* renderer) {
+    SDL_Surface* surf = IMG_Load_RW(SDL_RWFromConstMem(SPRITE_SHEET, (int)SPRITE_SHEET_len), 1);
+    if (!surf) return nullptr;
+    SDL_Surface* inv = createInvertedSurface(surf);
+    SDL_FreeSurface(surf);
+    if (!inv) return nullptr;
+    SDL_Texture* tex = SDL_CreateTextureFromSurface(renderer, inv);
+    if (tex) {
+        SDL_SetTextureBlendMode(tex, SDL_BLENDMODE_BLEND);
+    }
+    SDL_FreeSurface(inv);
+    return tex;
+}
+
+} // namespace
+
+int main(int /*argc*/, char* /*argv*/[]) {
+    if (SDL_Init(SDL_INIT_TIMER | SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_GAMECONTROLLER) < 0) { [[unlikely]]
+        logError("SDL_Init error", SDL_GetError());
+        XReboot();
+        __builtin_unreachable();
+        return 1;
+    }
+
+    if (!(IMG_Init(IMG_INIT_PNG) & IMG_INIT_PNG)) { [[unlikely]]
+        logError("SDL_image init error", IMG_GetError());
+        SDL_Quit();
+        XReboot();
+        __builtin_unreachable();
+        return 1;
+    }
+
+    SDL_Window* window = SDL_CreateWindow(
+        "DINOGAME",
+        SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+        WINDOW_WIDTH, WINDOW_HEIGHT,
+        SDL_WINDOW_SHOWN
+    );
+    if (!window) { [[unlikely]]
+        logError("Window creation error", SDL_GetError());
+        IMG_Quit(); SDL_Quit();
+        XReboot();
+        __builtin_unreachable();
+        return 1;
+    }
+
+    SDL_Renderer* renderer = SDL_CreateRenderer(
+        window, -1,
+        SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC
+    );
+    if (!renderer) { [[unlikely]]
+        logError("Renderer creation error", SDL_GetError());
+        SDL_DestroyWindow(window);
+        IMG_Quit(); SDL_Quit();
+        XReboot();
+        __builtin_unreachable();
+        return 1;
+    }
+
+    SDL_RenderSetLogicalSize(renderer, GAME_WIDTH, GAME_HEIGHT);
+
+    SDL_Texture* sprite    = loadSpriteTexture(renderer);
+    SDL_Texture* spriteInv = loadInvertedSpriteTexture(renderer);
+
+    if (!sprite || !spriteInv) { [[unlikely]]
+        logError("Failed to load sprite texture", "aborting");
+        if (sprite)    SDL_DestroyTexture(sprite);
+        if (spriteInv) SDL_DestroyTexture(spriteInv);
+        SDL_DestroyRenderer(renderer);
+        SDL_DestroyWindow(window);
+        IMG_Quit(); SDL_Quit();
+        XReboot();
+        __builtin_unreachable();
+        return 1;
+    }
+
+    Game game(renderer, sprite, spriteInv, GET_RAND_SEED());
+
+#ifdef AUTOPLAYER
+    AutoPlayer bot;
+    bot.enabled = true;
+#endif
+
+    SDL_Event event;
+    while (game.isRunning()) {
+#ifdef AUTOPLAYER
+        bot.tick(*game.getTrex(), *game.getHorizon(), game.getCurrentSpeed());
+#endif
+        while (SDL_PollEvent(&event)) {
+#ifdef AUTOPLAYER
+            if (event.type == SDL_CONTROLLERBUTTONDOWN &&
+                event.cbutton.button == SDL_CONTROLLER_BUTTON_BACK)
+            {
+                bot.enabled = !bot.enabled;
+            } else
+#endif
+            game.handleEvent(event);
+        }
+
+        game.update();
+        SDL_RenderPresent(renderer);
+    }
+
+    SDL_DestroyTexture(sprite);
+    SDL_DestroyTexture(spriteInv);
+    SDL_DestroyRenderer(renderer);
+    SDL_DestroyWindow(window);
+    IMG_Quit();
+    SDL_Quit();
+
+    XReboot();
+    __builtin_unreachable();
+    return 0;
+}
