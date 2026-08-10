@@ -10,6 +10,8 @@
 #ifdef __PS2__
 #include "ps2_assets.h"
 #include "ps2/sdl_joypad.h"
+#elif defined(__XBOX__)
+#include "xbox_assets.h"
 #endif
 #include <cmath>
 #include <algorithm>
@@ -30,9 +32,11 @@ Game::Game(SDL_Renderer* renderer, SDL_Texture* sprite, SDL_Texture* spriteInv, 
 }
 
 Game::~Game() {
+    #ifndef __XBOX__
     if (sndHit_)   Mix_FreeChunk(sndHit_);
     if (sndPress_) Mix_FreeChunk(sndPress_);
     if (sndScore_) Mix_FreeChunk(sndScore_);
+    #endif
     if (gamepad_)  SDL_GameControllerClose(gamepad_);
 #ifdef __PS2__
     if (joystick_) SDL_JoystickClose(joystick_);
@@ -60,7 +64,7 @@ void Game::loadSounds() {
     sndHit_   = Mix_LoadWAV_RW(SDL_RWFromConstMem(SND_HIT,   SND_HIT_len),   1);
     sndPress_ = Mix_LoadWAV_RW(SDL_RWFromConstMem(SND_PRESS, SND_PRESS_len), 1);
     sndScore_ = Mix_LoadWAV_RW(SDL_RWFromConstMem(SND_SCORE, SND_SCORE_len), 1);
-#else
+#elif !defined(__XBOX__)
     sndHit_   = Mix_LoadWAV(hitWav);
     sndPress_ = Mix_LoadWAV(pressWav);
     sndScore_ = Mix_LoadWAV(scoreWav);
@@ -109,6 +113,8 @@ void Game::loadHighScore() {
         distanceMeter_->setHighScore(highestScore_);
 #elif __PS2__
     return;
+#elif defined(__XBOX__)
+    return;
 #else
     std::ifstream f("highscore.dat", std::ios::binary);
     if (!f) return;
@@ -151,15 +157,21 @@ void Game::saveHighScore() {
     f.write(reinterpret_cast<const char*>(&highestScore_), sizeof(highestScore_));
 #elif __PS2__
     return;
+#elif defined(__XBOX__)
+    return;
 #else
     std::ofstream f("highscore.dat", std::ios::binary | std::ios::trunc);
     f.write(reinterpret_cast<const char*>(&highestScore_), sizeof(highestScore_));
 #endif
 }
 
+#ifndef __XBOX__
 void Game::playSound(Mix_Chunk* chunk) {
+
     if (chunk) Mix_PlayChannel(-1, chunk, 0);
+
 }
+#endif
 
 void Game::pollGamepad() {
 #ifdef __PS2__
@@ -181,7 +193,9 @@ void Game::pollGamepad() {
                     keyJump_ = true;
                     if (state_ == GameState::WAITING) startGame();
                     if (!trex_->jumping && !trex_->ducking) {
+#ifndef __XBOX__
                         playSound(sndPress_);
+#endif
                         trex_->startJump(currentSpeed_);
                     }
                 }
@@ -252,7 +266,9 @@ void Game::pollGamepad() {
                 keyJump_ = true;
                 if (state_ == GameState::WAITING) startGame();
                 if (!trex_->jumping && !trex_->ducking) {
+#ifndef __XBOX__
                     playSound(sndPress_);
+#endif
                     trex_->startJump(currentSpeed_);
                 }
             }
@@ -345,7 +361,9 @@ void Game::handleEvent(const SDL_Event& e) {
                 keyJump_ = true;
                 if (state_ == GameState::WAITING) startGame();
                 if (!trex_->jumping && !trex_->ducking) {
+#ifndef __XBOX__
                     playSound(sndPress_);
+#endif
                     trex_->startJump(currentSpeed_);
                 }
             }
@@ -398,7 +416,9 @@ void Game::handleEvent(const SDL_Event& e) {
                             startGame();
                         }
                         if (!trex_->jumping && !trex_->ducking) {
+#ifndef __XBOX__
                             playSound(sndPress_);
+#endif
                             trex_->startJump(currentSpeed_);
                         }
                     }
@@ -465,8 +485,9 @@ void Game::startGame() {
 }
 
 void Game::gameOver() {
+#ifndef __XBOX__
     playSound(sndHit_);
-
+#endif
     state_     = GameState::GAME_OVER;
     crashTime_ = SDL_GetTicks();
 
@@ -499,7 +520,9 @@ void Game::restart() {
     distanceMeter_->reset();
     distanceMeter_->cancelHighScoreFlashing();
     gameOverPanel_->reset();
+#ifndef __XBOX__
     playSound(sndPress_);
+#endif
 }
 
 void Game::clearCanvas() const {
@@ -611,13 +634,13 @@ void Game::update() {
                 currentSpeed_ += ACCELERATION;
             }
         }
-
+#ifndef __XBOX__
         bool playScore = distanceMeter_->update(deltaTime,
                                                 (int)std::ceil(distanceRan_), showNight);
         if (playScore) {
             playSound(sndScore_);
         }
-
+#endif
         handleNightMode(deltaTime);
 
     } else if (state_ == GameState::PAUSED) {
