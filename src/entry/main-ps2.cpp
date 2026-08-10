@@ -58,8 +58,6 @@ SDL_Texture* loadInvertedTile(SDL_Renderer* renderer, const unsigned char* bytes
 } // namespace
 
 int main(int /*argc*/, char* /*argv*/[]) {
-    std::srand(static_cast<unsigned>(std::time(nullptr))); // NOLINT
-
     init_joystick_driver(true);
     init_audio_driver();
 
@@ -94,7 +92,7 @@ int main(int /*argc*/, char* /*argv*/[]) {
     }
 
     SDL_Window* window = SDL_CreateWindow(
-        "Chromium Dino Game",
+        "DINOGAME",
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
         WINDOW_WIDTH, WINDOW_HEIGHT,
         SDL_WINDOW_SHOWN
@@ -139,14 +137,8 @@ int main(int /*argc*/, char* /*argv*/[]) {
     ps2RegisterTiles(tile1, tile2, PS2_SPRITE_TILE_SPLIT);
     ps2RegisterTiles(tile1Inv, tile2Inv, PS2_SPRITE_TILE_SPLIT);
 
-    Game game(renderer, tile1, tile1Inv);
-
-#ifdef AUTOPLAYER
-    AutoPlayer bot;
-    bot.enabled = true;
-#endif
-
     ps2sdl::Ps2SdlPad pad;
+
     if (!pad.init()) {
         std::cerr << "PS2 pad to SDL2 initialization failed: " << SDL_GetError() << "\n";
         SDL_DestroyTexture(tile1);
@@ -164,6 +156,13 @@ int main(int /*argc*/, char* /*argv*/[]) {
         return 1;
     }
 
+    Game game(renderer, tile1, tile1Inv, pad.getIOPTimingSeed(getSeed()));
+
+#ifdef AUTOPLAYER
+    AutoPlayer bot;
+    bot.enabled = true;
+#endif
+
     SDL_Event event;
     while (game.isRunning()) {
 #ifdef AUTOPLAYER
@@ -172,6 +171,13 @@ int main(int /*argc*/, char* /*argv*/[]) {
         pad.update();
 
         while (SDL_PollEvent(&event)) {
+#ifdef AUTOPLAYER
+            if (event.type == SDL_CONTROLLERBUTTONDOWN &&
+                event.cbutton.button == ps2sdl::PS2SDL_CONTROLLER_BUTTON_SELECT)
+            {
+                bot.enabled = !bot.enabled;
+            } else
+#endif
             game.handleEvent(event);
         }
 

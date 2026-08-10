@@ -24,8 +24,6 @@ int   WINDOW_HEIGHT = GAME_HEIGHT * 2;
 float MS_PER_FRAME  = 1000.0f / FPS;
 
 int SDL_main(int /*argc*/, char* /*argv*/[]) {
-    std::srand((unsigned)std::time(nullptr)); // NOLINT
-
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_GAMECONTROLLER) < 0) {
 #ifdef _WIN32
         MessageBoxA(NULL, "SDL initialization error", "DinoGame | Error", MB_OK | MB_ICONERROR);
@@ -149,7 +147,7 @@ int SDL_main(int /*argc*/, char* /*argv*/[]) {
     }
     SDL_SetTextureBlendMode(spriteInv, SDL_BLENDMODE_BLEND);
 
-    Game game(renderer, sprite, spriteInv);
+    Game game(renderer, sprite, spriteInv, getSeed());
 
 #ifdef AUTOPLAYER
     AutoPlayer bot;

@@ -16,22 +16,40 @@ extern "C" {
 namespace ps2sdl {
 
 enum : int {
-    PS2SDL_SELECT   = 0,
-    PS2SDL_L3       = 1,
-    PS2SDL_R3       = 2,
-    PS2SDL_START    = 3,
-    PS2SDL_UP       = 4,
-    PS2SDL_RIGHT    = 5,
-    PS2SDL_DOWN     = 6,
-    PS2SDL_LEFT     = 7,
-    PS2SDL_L2       = 8,
-    PS2SDL_R2       = 9,
-    PS2SDL_L1       = 10,
-    PS2SDL_R1       = 11,
-    PS2SDL_TRIANGLE = 12,
-    PS2SDL_CIRCLE   = 13,
-    PS2SDL_CROSS    = 14,
-    PS2SDL_SQUARE   = 15,
+    PS2SDL_PAD_SELECT   = 0,
+    PS2SDL_PAD_L3       = 1,
+    PS2SDL_PAD_R3       = 2,
+    PS2SDL_PAD_START    = 3,
+    PS2SDL_PAD_UP       = 4,
+    PS2SDL_PAD_RIGHT    = 5,
+    PS2SDL_PAD_DOWN     = 6,
+    PS2SDL_PAD_LEFT     = 7,
+    PS2SDL_PAD_L2       = 8,
+    PS2SDL_PAD_R2       = 9,
+    PS2SDL_PAD_L1       = 10,
+    PS2SDL_PAD_R1       = 11,
+    PS2SDL_PAD_TRIANGLE = 12,
+    PS2SDL_PAD_CIRCLE   = 13,
+    PS2SDL_PAD_CROSS    = 14,
+    PS2SDL_PAD_SQUARE   = 15,
+};
+
+enum : int {
+    PS2SDL_CONTROLLER_BUTTON_CROSS    = SDL_CONTROLLER_BUTTON_A,
+    PS2SDL_CONTROLLER_BUTTON_CIRCLE   = SDL_CONTROLLER_BUTTON_B,
+    PS2SDL_CONTROLLER_BUTTON_SQUARE   = SDL_CONTROLLER_BUTTON_X,
+    PS2SDL_CONTROLLER_BUTTON_TRIANGLE = SDL_CONTROLLER_BUTTON_Y,
+    PS2SDL_CONTROLLER_BUTTON_SELECT   = SDL_CONTROLLER_BUTTON_BACK,
+    PS2SDL_CONTROLLER_BUTTON_GUIDE    = SDL_CONTROLLER_BUTTON_GUIDE,
+    PS2SDL_CONTROLLER_BUTTON_START    = SDL_CONTROLLER_BUTTON_START,
+    PS2SDL_CONTROLLER_BUTTON_L3       = SDL_CONTROLLER_BUTTON_LEFTSTICK,
+    PS2SDL_CONTROLLER_BUTTON_R3       = SDL_CONTROLLER_BUTTON_RIGHTSTICK,
+    PS2SDL_CONTROLLER_BUTTON_L1       = SDL_CONTROLLER_BUTTON_LEFTSHOULDER,
+    PS2SDL_CONTROLLER_BUTTON_R1       = SDL_CONTROLLER_BUTTON_RIGHTSHOULDER,
+    PS2SDL_CONTROLLER_BUTTON_UP       = SDL_CONTROLLER_BUTTON_DPAD_UP,
+    PS2SDL_CONTROLLER_BUTTON_DOWN     = SDL_CONTROLLER_BUTTON_DPAD_DOWN,
+    PS2SDL_CONTROLLER_BUTTON_LEFT     = SDL_CONTROLLER_BUTTON_DPAD_LEFT,
+    PS2SDL_CONTROLLER_BUTTON_RIGHT    = SDL_CONTROLLER_BUTTON_DPAD_RIGHT,
 };
 
 Sint16 Ps2StickToSdl(unsigned char value);
@@ -46,6 +64,7 @@ public:
     Ps2SdlPad(const Ps2SdlPad&) = delete;
     Ps2SdlPad& operator=(const Ps2SdlPad&) = delete;
 
+    std::uint32_t getIOPTimingSeed(std::uint32_t seed);
     bool init();
     void shutdown();
     void update();
@@ -81,6 +100,7 @@ private:
         const std::array<bool, SDL_CONTROLLER_BUTTON_MAX>& buttons,
         const std::array<Sint16, SDL_CONTROLLER_AXIS_MAX>& axes
     );
+    std::uint32_t mixIOPTimingSeed(std::uint32_t seed, std::uint32_t elapsed, const padButtonStatus& status, unsigned char result);
 };
 
 } // namespace ps2sdl

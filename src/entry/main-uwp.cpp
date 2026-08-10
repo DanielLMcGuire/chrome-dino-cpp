@@ -51,8 +51,6 @@ std::vector<uint8_t> LoadFileBytes(const char* uri)
 
 int main(int argc, char* argv[])
 {
-    std::srand((unsigned)std::time(nullptr));
-
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_GAMECONTROLLER) < 0) {
         ShowError(L"DinoGame | Error", L"SDL initialization error");
         winrt::uninit_apartment();
@@ -152,7 +150,7 @@ int main(int argc, char* argv[])
     }
     SDL_SetTextureBlendMode(spriteInv, SDL_BLENDMODE_BLEND);
 
-    Game game(renderer, sprite, spriteInv);
+    Game game(renderer, sprite, spriteInv, getSeed());
 
 #ifdef AUTOPLAYER
     AutoPlayer bot;

@@ -9,13 +9,14 @@
 #include <SDL2/SDL.h>
 #include <memory>
 #include <array>
+#include <cstdint>
 
 enum class GameState { WAITING, PLAYING, PAUSED, GAME_OVER };
 
 class Game {
 public:
     /// @brief Constructs the game and initializes all of its components
-    Game(SDL_Renderer* renderer, SDL_Texture* sprite, SDL_Texture* spriteInv);
+    Game(SDL_Renderer* renderer, SDL_Texture* sprite, SDL_Texture* spriteInv, std::uint32_t seed);
     ~Game();
 
     /// @brief Handles all game events (keyboard, mouse, etc.)

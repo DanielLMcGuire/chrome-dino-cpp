@@ -1,6 +1,8 @@
 #include "sdl_joypad.h"
+#include "util.h"
 
 #include <string>
+#include <timer.h>
 
 namespace ps2sdl {
 
@@ -55,6 +57,55 @@ bool Ps2SdlPad::init()
 
     next_open_try_ = 0;
     return true;
+}
+
+std::uint32_t Ps2SdlPad::mixIOPTimingSeed(
+    std::uint32_t seed,
+    std::uint32_t elapsed,
+    const padButtonStatus& status,
+    unsigned char result)
+{
+    seed ^= elapsed + 0x9e3779b9u + (seed << 6) + (seed >> 2);
+
+    seed ^= static_cast<std::uint32_t>(status.btns) << 16;
+    seed ^= static_cast<std::uint32_t>(status.ljoy_h);
+    seed ^= static_cast<std::uint32_t>(status.ljoy_v) << 8;
+    seed ^= static_cast<std::uint32_t>(status.rjoy_h) << 16;
+    seed ^= static_cast<std::uint32_t>(status.rjoy_v) << 24;
+
+    seed ^= static_cast<std::uint32_t>(result);
+
+    seed ^= seed >> 16;
+    seed *= 0x85ebca6bu;
+    seed ^= seed >> 13;
+    seed *= 0xc2b2ae35u;
+    seed ^= seed >> 16;
+
+    return seed;
+}
+
+std::uint32_t Ps2SdlPad::getIOPTimingSeed(std::uint32_t seed)
+{
+    int port = pollActivePort();
+
+    if (port < 0) {
+        return seed;
+    }
+
+    padButtonStatus status{};
+
+    for (int i = 0; i < 1024; ++i) {
+        const std::uint32_t start = cpu_ticks();
+
+        const unsigned char result = padRead(port, 0, &status);
+
+        const std::uint32_t end = cpu_ticks();
+        const std::uint32_t elapsed = end - start;
+
+        seed = mixIOPTimingSeed(seed, elapsed, status, result);
+    }
+
+    return seed ? seed : 0x6d2b79f5u;
 }
 
 void Ps2SdlPad::shutdown()
@@ -278,22 +329,22 @@ void Ps2SdlPad::applyStatus(int port, const struct padButtonStatus& status)
     std::array<bool, SDL_CONTROLLER_BUTTON_MAX> buttons{};
     std::array<Sint16, SDL_CONTROLLER_AXIS_MAX> axes{};
 
-    buttons[PS2SDL_SELECT]   = (mask & PAD_SELECT) != 0;
-    buttons[PS2SDL_L3]       = (mask & PAD_L3) != 0;
-    buttons[PS2SDL_R3]       = (mask & PAD_R3) != 0;
-    buttons[PS2SDL_START]    = (mask & PAD_START) != 0;
-    buttons[PS2SDL_UP]       = (mask & PAD_UP) != 0;
-    buttons[PS2SDL_RIGHT]    = (mask & PAD_RIGHT) != 0;
-    buttons[PS2SDL_DOWN]     = (mask & PAD_DOWN) != 0;
-    buttons[PS2SDL_LEFT]     = (mask & PAD_LEFT) != 0;
-    buttons[PS2SDL_L2]       = (mask & PAD_L2) != 0;
-    buttons[PS2SDL_R2]       = (mask & PAD_R2) != 0;
-    buttons[PS2SDL_L1]       = (mask & PAD_L1) != 0;
-    buttons[PS2SDL_R1]       = (mask & PAD_R1) != 0;
-    buttons[PS2SDL_TRIANGLE] = (mask & PAD_TRIANGLE) != 0;
-    buttons[PS2SDL_CIRCLE]   = (mask & PAD_CIRCLE) != 0;
-    buttons[PS2SDL_CROSS]    = (mask & PAD_CROSS) != 0;
-    buttons[PS2SDL_SQUARE]   = (mask & PAD_SQUARE) != 0;
+    buttons[PS2SDL_PAD_SELECT]   = (mask & PAD_SELECT) != 0;
+    buttons[PS2SDL_PAD_L3]       = (mask & PAD_L3) != 0;
+    buttons[PS2SDL_PAD_R3]       = (mask & PAD_R3) != 0;
+    buttons[PS2SDL_PAD_START]    = (mask & PAD_START) != 0;
+    buttons[PS2SDL_PAD_UP]       = (mask & PAD_UP) != 0;
+    buttons[PS2SDL_PAD_RIGHT]    = (mask & PAD_RIGHT) != 0;
+    buttons[PS2SDL_PAD_DOWN]     = (mask & PAD_DOWN) != 0;
+    buttons[PS2SDL_PAD_LEFT]     = (mask & PAD_LEFT) != 0;
+    buttons[PS2SDL_PAD_L2]       = (mask & PAD_L2) != 0;
+    buttons[PS2SDL_PAD_R2]       = (mask & PAD_R2) != 0;
+    buttons[PS2SDL_PAD_L1]       = (mask & PAD_L1) != 0;
+    buttons[PS2SDL_PAD_R1]       = (mask & PAD_R1) != 0;
+    buttons[PS2SDL_PAD_TRIANGLE] = (mask & PAD_TRIANGLE) != 0;
+    buttons[PS2SDL_PAD_CIRCLE]   = (mask & PAD_CIRCLE) != 0;
+    buttons[PS2SDL_PAD_CROSS]    = (mask & PAD_CROSS) != 0;
+    buttons[PS2SDL_PAD_SQUARE]   = (mask & PAD_SQUARE) != 0;
 
     if (dualshock_[port]) {
         axes[SDL_CONTROLLER_AXIS_LEFTX] = Ps2StickToSdl(status.ljoy_h);

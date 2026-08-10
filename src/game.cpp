@@ -15,9 +15,10 @@
 #include <algorithm>
 #include <fstream>
 
-Game::Game(SDL_Renderer* renderer, SDL_Texture* sprite, SDL_Texture* spriteInv)
+Game::Game(SDL_Renderer* renderer, SDL_Texture* sprite, SDL_Texture* spriteInv, std::uint32_t seed)
     : renderer_(renderer), sprite_(sprite), spriteInv_(spriteInv)
 {
+    std::srand(seed);
     trex_          = std::make_unique<Trex>(renderer_, sprite_, spriteInv_);
     horizon_       = std::make_unique<Horizon>(renderer_, sprite_, spriteInv_);
     distanceMeter_ = std::make_unique<DistanceMeter>(renderer_, sprite_, spriteInv_);
@@ -163,10 +164,10 @@ void Game::playSound(Mix_Chunk* chunk) {
 void Game::pollGamepad() {
 #ifdef __PS2__
     if (joystick_) {
-        constexpr int BTN_JUMP           = ps2sdl::PS2SDL_CROSS;
-        constexpr int BTN_DUCK           = ps2sdl::PS2SDL_SQUARE;
-        constexpr int BTN_RESTART        = ps2sdl::PS2SDL_START;
-        constexpr int BTN_CLEAR_HISCORE  = ps2sdl::PS2SDL_L1;
+        constexpr int BTN_JUMP           = ps2sdl::PS2SDL_PAD_CROSS;
+        constexpr int BTN_DUCK           = ps2sdl::PS2SDL_PAD_SQUARE;
+        constexpr int BTN_RESTART        = ps2sdl::PS2SDL_PAD_START;
+        constexpr int BTN_CLEAR_HISCORE  = ps2sdl::PS2SDL_PAD_L1;
 
         auto pressed = [&](int idx) -> bool {
             return SDL_JoystickGetButton(joystick_, idx) != 0;
