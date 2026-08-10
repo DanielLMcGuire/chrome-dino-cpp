@@ -4,8 +4,8 @@
 #include <ps2_all_drivers.h>
 #include <audsrv.h>
 #include <cstdlib>
-#include <ctime>
 #include <iostream>
+#include <fstream>
 
 #include "defs.h"
 #include "game.h"
@@ -58,17 +58,25 @@ SDL_Texture* loadInvertedTile(SDL_Renderer* renderer, const unsigned char* bytes
 } // namespace
 
 int main(int /*argc*/, char* /*argv*/[]) {
+#ifdef __PCSX2__
+    std::ofstream errorFile("DINOGAME-LOG-ERROR.TXT");
+    if (errorFile.is_open())
+        std::cerr.rdbuf(errorFile.rdbuf());
+    std::ofstream outFile("DINOGAME-LOG-OUTPUT.TXT");
+    if (outFile.is_open())
+        std::cout.rdbuf(outFile.rdbuf());
+#endif
     init_joystick_driver(true);
     init_audio_driver();
 
-    if (SDL_Init(SDL_INIT_TIMER | SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_GAMECONTROLLER) < 0) {
+    if (SDL_Init(SDL_INIT_TIMER | SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_GAMECONTROLLER) < 0) { [[unlikely]]
         std::cerr << "SDL_Init error: " << SDL_GetError() << "\n";
         deinit_audio_driver();
         deinit_joystick_driver(false);
         return 1;
     }
 
-    if (!(IMG_Init(IMG_INIT_PNG) & IMG_INIT_PNG)) {
+    if (!(IMG_Init(IMG_INIT_PNG) & IMG_INIT_PNG)) { [[unlikely]]
         std::cerr << "SDL_image init error: " << IMG_GetError() << "\n";
         SDL_Quit();
         deinit_audio_driver();
@@ -85,7 +93,7 @@ int main(int /*argc*/, char* /*argv*/[]) {
         audsrv_set_volume(MAX_VOLUME);
     }
 
-    if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) < 0) {
+    if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) < 0) { [[unlikely]]
         std::cerr << "Audio init error (continuing without audio): " << Mix_GetError() << "\n";
     } else {
         Mix_Init(MIX_INIT_MP3);
@@ -97,7 +105,7 @@ int main(int /*argc*/, char* /*argv*/[]) {
         WINDOW_WIDTH, WINDOW_HEIGHT,
         SDL_WINDOW_SHOWN
     );
-    if (!window) {
+    if (!window) { [[unlikely]]
         std::cerr << "Window creation error: " << SDL_GetError() << "\n";
         Mix_CloseAudio(); Mix_Quit(); IMG_Quit(); SDL_Quit();
         deinit_audio_driver();
@@ -109,7 +117,7 @@ int main(int /*argc*/, char* /*argv*/[]) {
         window, -1,
         SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC
     );
-    if (!renderer) {
+    if (!renderer) { [[unlikely]]
         std::cerr << "Renderer creation error: " << SDL_GetError() << "\n";
         SDL_DestroyWindow(window);
         Mix_CloseAudio(); Mix_Quit(); IMG_Quit(); SDL_Quit();
@@ -125,7 +133,7 @@ int main(int /*argc*/, char* /*argv*/[]) {
     SDL_Texture* tile1Inv = loadInvertedTile(renderer, SPRITE_SHEET_TILE1, SPRITE_SHEET_TILE1_len);
     SDL_Texture* tile2Inv = loadInvertedTile(renderer, SPRITE_SHEET_TILE2, SPRITE_SHEET_TILE2_len);
 
-    if (!tile1 || !tile2 || !tile1Inv || !tile2Inv) {
+    if (!tile1 || !tile2 || !tile1Inv || !tile2Inv) { [[unlikely]]
         std::cerr << "Failed to load one or more sprite tiles -- aborting.\n";
         SDL_DestroyRenderer(renderer); SDL_DestroyWindow(window);
         Mix_CloseAudio(); Mix_Quit(); IMG_Quit(); SDL_Quit();
@@ -139,7 +147,7 @@ int main(int /*argc*/, char* /*argv*/[]) {
 
     ps2sdl::Ps2SdlPad pad;
 
-    if (!pad.init()) {
+    if (!pad.init()) { [[unlikely]]
         std::cerr << "PS2 pad to SDL2 initialization failed: " << SDL_GetError() << "\n";
         SDL_DestroyTexture(tile1);
         SDL_DestroyTexture(tile2);
@@ -156,14 +164,14 @@ int main(int /*argc*/, char* /*argv*/[]) {
         return 1;
     }
 
-    Game game(renderer, tile1, tile1Inv, pad.getIOPTimingSeed(getSeed()));
+    Game game(renderer, tile1, tile1Inv, GET_RAND_SEED(pad));
 
 #ifdef AUTOPLAYER
     AutoPlayer bot;
     bot.enabled = true;
 #endif
 
-    SDL_Event event;
+    static SDL_Event event;
     while (game.isRunning()) {
 #ifdef AUTOPLAYER
         bot.tick(*game.getTrex(), *game.getHorizon(), game.getCurrentSpeed());
@@ -186,7 +194,6 @@ int main(int /*argc*/, char* /*argv*/[]) {
     }
 
     pad.shutdown();
-
     SDL_DestroyTexture(tile1);
     SDL_DestroyTexture(tile2);
     SDL_DestroyTexture(tile1Inv);

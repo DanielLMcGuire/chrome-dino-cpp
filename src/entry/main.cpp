@@ -3,7 +3,6 @@
 #include <SDL_mixer.h>
 #include <iostream>
 #include <cstdlib>
-#include <ctime>
 #include "util.h"
 
 #ifdef _WIN32
@@ -12,8 +11,6 @@
 
 #include "defs.h"
 #include "game.h"
-
-#define AUTOPLAYER 1
 
 #ifdef AUTOPLAYER
 #include "auto_player.h"
@@ -147,7 +144,7 @@ int SDL_main(int /*argc*/, char* /*argv*/[]) {
     }
     SDL_SetTextureBlendMode(spriteInv, SDL_BLENDMODE_BLEND);
 
-    Game game(renderer, sprite, spriteInv, getSeed());
+    Game game(renderer, sprite, spriteInv, GET_RAND_SEED());
 
 #ifdef AUTOPLAYER
     AutoPlayer bot;

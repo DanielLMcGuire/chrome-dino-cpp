@@ -16,9 +16,6 @@ if(PS2 OR PCSX2)
     set(CMAKE_EXECUTABLE_SUFFIX ".ELF")
 endif()
 
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
 if(PS2 OR PCSX2)
     add_executable(DinoGame
         src/game.cpp
@@ -27,6 +24,8 @@ if(PS2 OR PCSX2)
         src/entry/main-ps2.cpp
         src/ps2/sdl_joypad.cpp
     )
+
+    target_compile_features(DinoGame PRIVATE cxx_std_20)
 
     set(PS2_ASSETS_DIR "${CMAKE_BINARY_DIR}/ps2assets")
     set(PS2_ASSETS_HEADER "${PS2_ASSETS_DIR}/ps2_assets.h")
@@ -42,10 +41,10 @@ if(PS2 OR PCSX2)
         OUTPUT_NAME "DINOGAME"
     )
 
-    target_compile_definitions(DinoGame PRIVATE PS2)
+    target_compile_definitions(DinoGame PRIVATE PS2 __PS2__)
 
     if(PCSX2)
-        target_compile_definitions(DinoGame PRIVATE PCSX2)
+        target_compile_definitions(DinoGame PRIVATE PCSX2 __PCSX2__)
     endif()
 
     if(TESTS)
@@ -234,6 +233,8 @@ if(UWP)
 
     file(GLOB_RECURSE GAME_RESOURCES "resources/*")
 
+    list(FILTER GAME_RESOURCES EXCLUDE REGEX "ps2_100_percent")
+
     list(APPEND SOURCES ${GAME_RESOURCES})
 
     set_property(
@@ -265,7 +266,7 @@ if(UWP)
 
     set_source_files_properties(
         "${SDL2_SOURCE_DIR}/src/main/winrt/SDL_winrt_main_NonXAML.cpp"
-        PROPERTIES COMPILE_FLAGS "/ZW"
+        PROPERTIES COMPILE_FLAGS "/ZW /std:c++17 /EHsc"
     )
 endif()
 
@@ -274,6 +275,8 @@ if(ANDROID)
 else()
     add_executable(DinoGame ${SOURCES})
 endif()
+
+target_compile_features(DinoGame PRIVATE cxx_std_20)
 
 target_include_directories(DinoGame PRIVATE src)
 

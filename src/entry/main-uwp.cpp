@@ -6,7 +6,6 @@
 #include <SDL_image.h>
 #include <SDL_mixer.h>
 #include <cstdlib>
-#include <ctime>
 #include <future>
 #include <string>
 #include "util.h"
@@ -150,7 +149,7 @@ int main(int argc, char* argv[])
     }
     SDL_SetTextureBlendMode(spriteInv, SDL_BLENDMODE_BLEND);
 
-    Game game(renderer, sprite, spriteInv, getSeed());
+    Game game(renderer, sprite, spriteInv, GET_RAND_SEED());
 
 #ifdef AUTOPLAYER
     AutoPlayer bot;

@@ -102,7 +102,7 @@ void Game::loadHighScore() {
     if (ok && highestScore_ > 0)
         distanceMeter_->setHighScore(highestScore_);
 #elif __PCSX2__
-    std::ifstream f("dinogame_ps2_highscore.dat", std::ios::binary);
+    std::ifstream f("DINOGAME_HS.DAT", std::ios::binary);
     if (!f) return;
     f.read(reinterpret_cast<char*>(&highestScore_), sizeof(highestScore_));
     if (f && highestScore_ > 0)
@@ -147,7 +147,7 @@ void Game::saveHighScore() {
     fwrite(&highestScore_, sizeof(highestScore_), 1, f);
     fclose(f);
 #elif __PCSX2__
-    std::ofstream f("dinogame_ps2_highscore.dat", std::ios::binary | std::ios::trunc);
+    std::ofstream f("DINOGAME_HS.DAT", std::ios::binary | std::ios::trunc);
     f.write(reinterpret_cast<const char*>(&highestScore_), sizeof(highestScore_));
 #elif __PS2__
     return;
