@@ -171,7 +171,7 @@ int main(int /*argc*/, char* /*argv*/[]) {
     bot.enabled = true;
 #endif
 
-    static SDL_Event event;
+    SDL_Event event;
     while (game.isRunning()) {
 #ifdef AUTOPLAYER
         bot.tick(*game.getTrex(), *game.getHorizon(), game.getCurrentSpeed());

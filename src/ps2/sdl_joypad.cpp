@@ -75,13 +75,7 @@ std::uint32_t Ps2SdlPad::mixIOPTimingSeed(
 
     seed ^= static_cast<std::uint32_t>(result);
 
-    seed ^= seed >> 16;
-    seed *= 0x85ebca6bu;
-    seed ^= seed >> 13;
-    seed *= 0xc2b2ae35u;
-    seed ^= seed >> 16;
-
-    return seed;
+    return seedMix(seed);
 }
 
 std::uint32_t Ps2SdlPad::getIOPTimingSeed(std::uint32_t seed)
