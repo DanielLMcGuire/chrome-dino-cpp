@@ -16,10 +16,14 @@ SRCS = \
 NXDK_CXX = y
 NXDK_SDL = y
 
-NXDK_CFLAGS   += -D__XBOX__ -I$(CURDIR)/src -I$(CURDIR) \
-	-I$(NXDK_SDL_IMAGE_DIR)/include
-NXDK_CXXFLAGS += -D__XBOX__ -I$(CURDIR)/src -I$(CURDIR) \
-	-I$(NXDK_SDL_IMAGE_DIR)/include -std=c++20
+NXDK_CFLAGS += -U_DEBUG -DNDEBUG -D__XBOX__ \
+	-O3 -fno-math-errno -fwrapv \
+	-I$(CURDIR) -I$(CURDIR)/src -I$(NXDK_SDL_IMAGE_DIR)/include
+
+NXDK_CXXFLAGS += -U_DEBUG -DNDEBUG -D__XBOX__ \
+	-std=c++20 \
+	-O3 -fno-math-errno -fwrapv \
+	-I$(CURDIR) -I$(CURDIR)/src -I$(NXDK_SDL_IMAGE_DIR)/include
 
 include $(NXDK_DIR)/Makefile
 
