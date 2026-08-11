@@ -44,11 +44,10 @@ cmake --build build-ps2 -j$(nproc)
 Xbox:
 
 ```bash
-cd ~
 git clone --depth 1 --recurse-submodules --shallow-submodules https://github.com/XboxDev/nxdk.git
 git clone --depth 1 https://github.com/DanielLMcGuire/chrome-dino-cpp.git
 cd chrome-dino-cpp
-eval "$(~/nxdk/bin/activate -s)"
+eval "$(../nxdk/bin/activate -s)"
 make -f Makefile.nxdk
 # xemu -dvd_path DinoGame.iso
 ```
