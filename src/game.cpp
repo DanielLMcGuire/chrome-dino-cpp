@@ -634,9 +634,9 @@ void Game::update() {
                 currentSpeed_ += ACCELERATION;
             }
         }
-#ifndef __XBOX__
         bool playScore = distanceMeter_->update(deltaTime,
                                                 (int)std::ceil(distanceRan_), showNight);
+#ifndef __XBOX__
         if (playScore) {
             playSound(sndScore_);
         }
