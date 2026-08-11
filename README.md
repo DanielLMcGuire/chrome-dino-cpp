@@ -38,3 +38,14 @@ cmake -B build-ps2 -DCMAKE_TOOLCHAIN_FILE=$PS2SDK/ps2dev.cmake -DPS2=ON # OR -DP
 cmake --build build-ps2 -j$(nproc)
 # pcsx2 build-ps2/DINOGAME.ELF
 ```
+
+Xbox:
+
+```bash
+cd ~
+git clone --depth 1 --recurse-submodules --shallow-submodules https://github.com/XboxDev/nxdk.git
+cd # this repo
+eval "$(~/nxdk/bin/activate -s)"
+make -f Makefile.nxdk
+# xemu -dvd_path DinoGame.iso
+```
