@@ -14,6 +14,9 @@ public:
     static constexpr float COEFFICIENT      = 0.025f;
     static constexpr float FLASH_DURATION   = 1000.0f / 4.0f;
     static constexpr int   FLASH_ITERATIONS = 3;
+#ifdef __XBOX__
+    static constexpr int   XBOX_SCORE_SHIFT = 4 * DEST_WIDTH;
+#endif
 
     bool achievement = false;
 
@@ -157,6 +160,9 @@ private:
 
     void calcX() {
         x_ = GAME_WIDTH - DEST_WIDTH * (maxUnits_ + 1);
+#ifdef __XBOX__
+        x_ -= XBOX_SCORE_SHIFT;
+#endif
     }
 
     void drawDigit(int digitPos, int charPos, bool isHighScore, bool night) const {
