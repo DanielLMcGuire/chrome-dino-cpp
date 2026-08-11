@@ -25,7 +25,7 @@ To build for Android, open the android-build folder in Android Studio. Once insi
 PS2 build:
 
 ```bash
-git clone --depth=1 https://github.com/DanielLMcGuire/chrome-dino-cpp.git
+git clone --depth 1 https://github.com/DanielLMcGuire/chrome-dino-cpp.git
 cd chrome-dino-cpp
 export PS2DEV=$HOME/ps2dev
 export PS2SDK=$PS2DEV/ps2sdk
@@ -46,7 +46,7 @@ Xbox:
 ```bash
 cd ~
 git clone --depth 1 --recurse-submodules --shallow-submodules https://github.com/XboxDev/nxdk.git
-git clone --depth=1 https://github.com/DanielLMcGuire/chrome-dino-cpp.git
+git clone --depth 1 https://github.com/DanielLMcGuire/chrome-dino-cpp.git
 cd chrome-dino-cpp
 eval "$(~/nxdk/bin/activate -s)"
 make -f Makefile.nxdk
