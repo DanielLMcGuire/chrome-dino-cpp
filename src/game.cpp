@@ -10,7 +10,10 @@
 #ifdef __PS2__
 #include "ps2_assets.h"
 #include "ps2/sdl_joypad.h"
-#elif defined(__XBOX__)
+#elif defined(__XBOX__) && defined(AUTOPLAYER)
+extern "C" {
+#include <hal/led.h>
+}
 #include "xbox_assets.h"
 #endif
 #include <cmath>
@@ -485,6 +488,9 @@ void Game::startGame() {
 }
 
 void Game::gameOver() {
+#if defined(__XBOX__) && defined(AUTOPLAYER)
+     XSetCustomLED(XLEDColor::XLED_RED, XLEDColor::XLED_RED, XLEDColor::XLED_RED, XLEDColor::XLED_RED);
+#endif
 #ifndef __XBOX__
     playSound(sndHit_);
 #endif
@@ -507,7 +513,9 @@ void Game::gameOver() {
 }
 
 void Game::restart() {
-
+#if defined(__XBOX__) && defined(AUTOPLAYER)
+     XResetLED();
+#endif
     state_        = GameState::PLAYING;
     runningTime_  = 0.0f;
     distanceRan_  = 0.0f;
