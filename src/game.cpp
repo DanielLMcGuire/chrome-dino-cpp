@@ -13,9 +13,7 @@
 #define XBOXSDL_CONTROLLER_BUTTON_BLACK SDL_CONTROLLER_BUTTON_RIGHTSHOULDER
 #include "xbox_assets.h"
 #if defined(AUTOPLAYER)
-    extern "C" {
-    #include <hal/led.h>
-    }
+#include "xbox/hal.h"
 #endif
 #endif
 #include <cmath>

@@ -1,19 +1,16 @@
-#include <SDL.h>
-#include <SDL_image.h>
-
-extern "C" {
-#include <hal/xbox.h>
-#include <hal/led.h>
-}
-
+#include "../xbox/hal.h"
 #include <windows.h>
 #include <cstdlib>
+
+#include <SDL.h>
+#include <SDL_image.h>
 
 #include "defs.h"
 #include "game.h"
 #include "util.h"
 #include "xbox_assets.h"
-#include "../xbox/tools.h"
+
+// #define HD_FIDELITY_FIX
 
 #ifdef AUTOPLAYER
 #include "auto_player.h"
@@ -21,6 +18,7 @@ extern "C" {
 
 int   WINDOW_WIDTH = 640;
 int   WINDOW_HEIGHT = 480;
+int   INTERLACE_FILTER_AMT = 4;
 float MS_PER_FRAME  = 1000.0f / FPS;
 
 namespace {
@@ -29,7 +27,7 @@ SDL_Texture* loadSpriteTexture(SDL_Renderer* renderer) {
     SDL_Surface* surf = IMG_Load_RW(SDL_RWFromConstMem(SPRITE_SHEET, (int)SPRITE_SHEET_len), 1);
     if (!surf) { [[unlikely]]
 #ifdef _DEBUG
-        XSetCustomLED(XLEDColor::XLED_ORANGE, XLEDColor::XLED_GREEN, XLEDColor::XLED_ORANGE, XLEDColor::XLED_GREEN);
+        xbox::LED::set({xbox::LED::Color::ORANGE, xbox::LED::Color::GREEN, xbox::LED::Color::ORANGE, xbox::LED::Color::GREEN});
 #endif
         SDL_ShowSimpleMessageBox(
             SDL_MESSAGEBOX_ERROR,
@@ -38,7 +36,7 @@ SDL_Texture* loadSpriteTexture(SDL_Renderer* renderer) {
             nullptr
         );
         Sleep(5000);
-        xboxhelper::logError("Sprite decode error", IMG_GetError());
+        xbox::logError("Sprite decode error", IMG_GetError());
         return nullptr;
     }
     SDL_Texture* tex = SDL_CreateTextureFromSurface(renderer, surf);
@@ -46,7 +44,7 @@ SDL_Texture* loadSpriteTexture(SDL_Renderer* renderer) {
         SDL_SetTextureBlendMode(tex, SDL_BLENDMODE_BLEND);
     } else { [[unlikely]]
 #ifdef _DEBUG
-        XSetCustomLED(XLEDColor::XLED_ORANGE, XLEDColor::XLED_RED, XLEDColor::XLED_ORANGE, XLEDColor::XLED_RED);
+        xbox::LED::set({xbox::LED::Color::ORANGE, xbox::LED::Color::RED, xbox::LED::Color::ORANGE, xbox::LED::Color::RED});
 #endif
         SDL_ShowSimpleMessageBox(
             SDL_MESSAGEBOX_ERROR,
@@ -55,7 +53,7 @@ SDL_Texture* loadSpriteTexture(SDL_Renderer* renderer) {
             nullptr
         );
         Sleep(5000);
-        xboxhelper::logError("Sprite texture error", SDL_GetError());
+        xbox::logError("Sprite texture error", SDL_GetError());
     }
     SDL_FreeSurface(surf);
     return tex;
@@ -78,18 +76,23 @@ SDL_Texture* loadInvertedSpriteTexture(SDL_Renderer* renderer) {
 } // namespace
 
 void main() {
-    xboxhelper::resolution_t res = xboxhelper::initXboxVideo();
-    WINDOW_WIDTH = res.width;
-    WINDOW_HEIGHT = res.height;
+    xbox::Video video(1280, 720);
+#ifdef HD_FIDELITY_FIX
+    video.interlaceFilter(0);
+#else
+    video.interlaceFilter(INTERLACE_FILTER_AMT);
+#endif
+    WINDOW_WIDTH = video.getCurrentResolution().width;
+    WINDOW_HEIGHT = video.getCurrentResolution().height;
     if (SDL_Init(SDL_INIT_TIMER | SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_GAMECONTROLLER) < 0) { [[unlikely]]
-        xboxhelper::logError("SDL_Init error", SDL_GetError(), true);
-        __builtin_unreachable();
+        xbox::logError("SDL_Init error", SDL_GetError(), true);
+        XUnreachable();
     }
 
     if (!(IMG_Init(IMG_INIT_PNG) & IMG_INIT_PNG)) { [[unlikely]]
         SDL_Quit();
-        xboxhelper::logError("SDL_image init error", IMG_GetError(), true);
-        __builtin_unreachable();
+        xbox::logError("SDL_image init error", IMG_GetError(), true);
+        XUnreachable();
     }
 
     SDL_Window* window = SDL_CreateWindow(
@@ -100,16 +103,16 @@ void main() {
     );
     if (!window) { [[unlikely]]
         IMG_Quit(); SDL_Quit();
-        xboxhelper::logError("Window creation error", SDL_GetError(), true);
-        __builtin_unreachable();
+        xbox::logError("Window creation error", SDL_GetError(), true);
+        XUnreachable();
     }
 
     SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, 0);
     if (!renderer) { [[unlikely]]
         SDL_DestroyWindow(window);
         IMG_Quit(); SDL_Quit();
-        xboxhelper::logError("Renderer creation error", SDL_GetError(), true);
-        __builtin_unreachable();
+        xbox::logError("Renderer creation error", SDL_GetError(), true);
+        XUnreachable();
     }
 
     SDL_RenderSetLogicalSize(renderer, GAME_WIDTH, GAME_HEIGHT);
@@ -118,7 +121,7 @@ void main() {
     SDL_Texture* spriteInv = loadInvertedSpriteTexture(renderer);
 
     if (!sprite || !spriteInv) { [[unlikely]]
-        XSetCustomLED(XLEDColor::XLED_GREEN, XLEDColor::XLED_RED, XLEDColor::XLED_RED, XLEDColor::XLED_ORANGE);
+        xbox::LED::set({xbox::LED::Color::GREEN, xbox::LED::Color::RED, xbox::LED::Color::RED, xbox::LED::Color::ORANGE});
         if (sprite)    SDL_DestroyTexture(sprite);
         if (spriteInv) SDL_DestroyTexture(spriteInv);
         SDL_ShowSimpleMessageBox(
@@ -131,8 +134,8 @@ void main() {
         SDL_DestroyRenderer(renderer);
         SDL_DestroyWindow(window);
         IMG_Quit(); SDL_Quit();
-        xboxhelper::logError("Failed to load sprite texture", "aborting", true);
-        __builtin_unreachable();
+        xbox::logError("Failed to load sprite texture", "aborting", true);
+        XUnreachable();
     }
 
     Game game(renderer, sprite, spriteInv, GET_RAND_SEED());
@@ -169,5 +172,5 @@ void main() {
     IMG_Quit();
     SDL_Quit();
     XReboot();
-    __builtin_unreachable();
+    XUnreachable();
 }

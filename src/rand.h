@@ -44,7 +44,7 @@ static std::uint32_t getTimeAddressInitSeed() {
 #if __PS2__
     #define GET_RAND_SEED(x) x.getIOPTimingSeed(getTimeAddressInitSeed())
 #elif __XBOX__
-    #define GET_RAND_SEED() xboxhelper::getX86TimingSeed(getTimeAddressInitSeed())
+    #define GET_RAND_SEED() xbox::getX86TimingSeed(getTimeAddressInitSeed())
 #else
     #define GET_RAND_SEED() getTimeAddressInitSeed()
 #endif
