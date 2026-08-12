@@ -22,7 +22,7 @@ if(PS2 OR PCSX2)
         src/entities/obstacle.cpp
         src/entities/trex.cpp
         src/entry/main-ps2.cpp
-        src/ps2/sdl_joypad.cpp
+        src/ps2/sdl_gamepad.cpp
     )
 
     target_compile_features(DinoGame PRIVATE cxx_std_20)
@@ -83,7 +83,7 @@ if(PS2 OR PCSX2)
 
     if(NOT PILLOW_RESULT EQUAL 0)
         message(FATAL_ERROR
-            "Python Pillow is required to build PS2 assets, but it is not installed.\n"
+            "Python Pillow is required to build assets, but it is not installed.\n"
             "Install it with:\n"
             "  ${Python3_EXECUTABLE} -m pip install Pillow"
         )

@@ -1,4 +1,4 @@
-#include "sdl_joypad.h"
+#include "sdl_gamepad.h"
 #include "util.h"
 
 #include <string>
