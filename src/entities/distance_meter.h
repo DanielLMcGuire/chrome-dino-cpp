@@ -15,7 +15,7 @@ public:
     static constexpr float FLASH_DURATION   = 1000.0f / 4.0f;
     static constexpr int   FLASH_ITERATIONS = 3;
 #ifdef __XBOX__
-    static constexpr int   XBOX_SCORE_SHIFT = 4 * DEST_WIDTH;
+    static constexpr int   XBOX_SCORE_SHIFT = 4 * DEST_WIDTH; // compensation for widescreen overscan
 #endif
 
     bool achievement = false;

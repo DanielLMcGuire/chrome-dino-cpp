@@ -13,7 +13,7 @@ There are configs for both UWP (Xbox), PS2, and win32/posix. (use -DXBOX=ON to e
 |DUCK|`DOWN`|`X`/<img width="24" height="24" alt="image" src="https://github.com/user-attachments/assets/a8de15c9-3a16-4599-93e9-db2d3c38f13e" />|
 |START/RESTART|`ENTER`|`≡`/<img width="24" height="24" alt="image" src="https://github.com/user-attachments/assets/a87f06da-a663-4be0-9938-6366e2a9fe40" />|
 |EXIT|`ESCAPE`|N/A|
-|Clear high score|Double-click `HI`|`LB`/<img width="24" height="24" alt="image" src="https://github.com/user-attachments/assets/9f0628ad-8a0c-45ff-806b-59f1893ed608" />|
+|Clear high score|Double-click `HI`|`LB`/<img width="24" height="24" alt="image" src="https://github.com/user-attachments/assets/9f0628ad-8a0c-45ff-806b-59f1893ed608" />/Black (Xbox)|
 
 ## Missing features from the original
 

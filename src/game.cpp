@@ -3,18 +3,20 @@
 #ifdef UWP
 #include <winrt/Windows.Foundation.h>
 #include <winrt/Windows.Storage.h>
-#endif
-#ifdef __ANDROID__
+#elif __ANDROID__
 #include <android/log.h>
-#endif
-#ifdef __PS2__
+#elif  __PS2__
 #include "ps2_assets.h"
-#include "ps2/sdl_joypad.h"
-#elif defined(__XBOX__) && defined(AUTOPLAYER)
-extern "C" {
-#include <hal/led.h>
-}
+#include "ps2/sdl_gamepad.h"
+#elif __XBOX__
+#define XBOXSDL_CONTROLLER_BUTTON_WHITE SDL_CONTROLLER_BUTTON_LEFTSHOULDER
+#define XBOXSDL_CONTROLLER_BUTTON_BLACK SDL_CONTROLLER_BUTTON_RIGHTSHOULDER
 #include "xbox_assets.h"
+#if defined(AUTOPLAYER)
+    extern "C" {
+    #include <hal/led.h>
+    }
+#endif
 #endif
 #include <cmath>
 #include <algorithm>
@@ -35,11 +37,11 @@ Game::Game(SDL_Renderer* renderer, SDL_Texture* sprite, SDL_Texture* spriteInv, 
 }
 
 Game::~Game() {
-    #ifndef __XBOX__
+#ifndef __XBOX__
     if (sndHit_)   Mix_FreeChunk(sndHit_);
     if (sndPress_) Mix_FreeChunk(sndPress_);
     if (sndScore_) Mix_FreeChunk(sndScore_);
-    #endif
+#endif
     if (gamepad_)  SDL_GameControllerClose(gamepad_);
 #ifdef __PS2__
     if (joystick_) SDL_JoystickClose(joystick_);
@@ -253,7 +255,11 @@ void Game::pollGamepad() {
     constexpr SDL_GameControllerButton BTN_JUMP    = SDL_CONTROLLER_BUTTON_A;
     constexpr SDL_GameControllerButton BTN_DUCK    = SDL_CONTROLLER_BUTTON_X;
     constexpr SDL_GameControllerButton BTN_RESTART = SDL_CONTROLLER_BUTTON_START;
+#ifdef __XBOX__
+    constexpr SDL_GameControllerButton BTN_CLEAR_HISCORE = XBOXSDL_CONTROLLER_BUTTON_BLACK;
+#else
     constexpr SDL_GameControllerButton BTN_CLEAR_HISCORE = SDL_CONTROLLER_BUTTON_LEFTSHOULDER;
+#endif
 
     auto pressed = [&](SDL_GameControllerButton idx) -> bool {
         return SDL_GameControllerGetButton(gamepad_,

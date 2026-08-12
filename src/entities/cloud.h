@@ -12,9 +12,9 @@ public:
     static constexpr int  MIN_GAP   = 100;
     static constexpr int  MAX_GAP   = 400;
 
-    float xPos  = 0.0f;
-    float yPos  = 0.0f;
-    float gap   = 0.0f;
+    float xPos   = 0.0f;
+    float yPos   = 0.0f;
+    float gap    = 0.0f;
     bool  remove = false;
 
     Cloud(SDL_Renderer* r, SDL_Texture* t, SDL_Texture* ti)
