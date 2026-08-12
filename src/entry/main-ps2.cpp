@@ -4,7 +4,7 @@
 #include <ps2_all_drivers.h>
 #include <audsrv.h>
 #include <cstdlib>
-#include <iostream>
+#include <cstdio>
 #include <fstream>
 
 #include "defs.h"
@@ -17,7 +17,7 @@
 #include "util.h"
 #include "drawSprite.h"
 #include "ps2_assets.h"
-#include "../ps2/sdl_joypad.h"
+#include "../ps2/sdl_gamepad.h"
 
 int   WINDOW_WIDTH  = 640;
 int   WINDOW_HEIGHT = 448;
@@ -28,14 +28,14 @@ namespace {
 SDL_Texture* loadTile(SDL_Renderer* renderer, const unsigned char* bytes, unsigned int len) {
     SDL_Surface* surf = IMG_Load_RW(SDL_RWFromConstMem(bytes, (int)len), 1);
     if (!surf) {
-        std::cerr << "Sprite tile decode error: " << IMG_GetError() << "\n";
+        std::fprintf(stderr, "Sprite tile decode error: %s\n", IMG_GetError());
         return nullptr;
     }
     SDL_Texture* tex = SDL_CreateTextureFromSurface(renderer, surf);
     if (tex) {
         SDL_SetTextureBlendMode(tex, SDL_BLENDMODE_BLEND);
     } else {
-        std::cerr << "Sprite tile texture error: " << SDL_GetError() << "\n";
+        std::fprintf(stderr, "Sprite tile texture error: %s\n", SDL_GetError());
     }
     SDL_FreeSurface(surf);
     return tex;
@@ -59,25 +59,21 @@ SDL_Texture* loadInvertedTile(SDL_Renderer* renderer, const unsigned char* bytes
 
 int main(int /*argc*/, char* /*argv*/[]) {
 #ifdef __PCSX2__
-    std::ofstream errorFile("DINOGAME-LOG-ERROR.TXT");
-    if (errorFile.is_open())
-        std::cerr.rdbuf(errorFile.rdbuf());
-    std::ofstream outFile("DINOGAME-LOG-OUTPUT.TXT");
-    if (outFile.is_open())
-        std::cout.rdbuf(outFile.rdbuf());
+    freopen("DINOGAME-LOG-ERROR.TXT", "w", stderr);
+    freopen("DINOGAME-LOG-OUTPUT.TXT", "w", stdout);
 #endif
     init_joystick_driver(true);
     init_audio_driver();
 
     if (SDL_Init(SDL_INIT_TIMER | SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_GAMECONTROLLER) < 0) { [[unlikely]]
-        std::cerr << "SDL_Init error: " << SDL_GetError() << "\n";
+        std::fprintf(stderr, "SDL_Init error: %s\n", SDL_GetError());
         deinit_audio_driver();
         deinit_joystick_driver(false);
         return 1;
     }
 
     if (!(IMG_Init(IMG_INIT_PNG) & IMG_INIT_PNG)) { [[unlikely]]
-        std::cerr << "SDL_image init error: " << IMG_GetError() << "\n";
+        std::fprintf(stderr, "SDL_image init error: %s", IMG_GetError());
         SDL_Quit();
         deinit_audio_driver();
         deinit_joystick_driver(false);
@@ -94,7 +90,7 @@ int main(int /*argc*/, char* /*argv*/[]) {
     }
 
     if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) < 0) { [[unlikely]]
-        std::cerr << "Audio init error (continuing without audio): " << Mix_GetError() << "\n";
+        std::fprintf(stderr, "Audio init error (continuing without audio): %s\n", Mix_GetError());
     } else {
         Mix_Init(MIX_INIT_MP3);
     }
@@ -106,7 +102,7 @@ int main(int /*argc*/, char* /*argv*/[]) {
         SDL_WINDOW_SHOWN
     );
     if (!window) { [[unlikely]]
-        std::cerr << "Window creation error: " << SDL_GetError() << "\n";
+        std::fprintf(stderr, "Window creation error: %s\n", SDL_GetError());
         Mix_CloseAudio(); Mix_Quit(); IMG_Quit(); SDL_Quit();
         deinit_audio_driver();
         deinit_joystick_driver(false);
@@ -118,7 +114,7 @@ int main(int /*argc*/, char* /*argv*/[]) {
         SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC
     );
     if (!renderer) { [[unlikely]]
-        std::cerr << "Renderer creation error: " << SDL_GetError() << "\n";
+        std::fprintf(stderr, "Renderer creation error: %s\n", SDL_GetError());
         SDL_DestroyWindow(window);
         Mix_CloseAudio(); Mix_Quit(); IMG_Quit(); SDL_Quit();
         deinit_audio_driver();
@@ -134,7 +130,7 @@ int main(int /*argc*/, char* /*argv*/[]) {
     SDL_Texture* tile2Inv = loadInvertedTile(renderer, SPRITE_SHEET_TILE2, SPRITE_SHEET_TILE2_len);
 
     if (!tile1 || !tile2 || !tile1Inv || !tile2Inv) { [[unlikely]]
-        std::cerr << "Failed to load one or more sprite tiles -- aborting.\n";
+        std::fputs(stderr, "Failed to load one or more sprites, aborting...");
         SDL_DestroyRenderer(renderer); SDL_DestroyWindow(window);
         Mix_CloseAudio(); Mix_Quit(); IMG_Quit(); SDL_Quit();
         deinit_audio_driver();
@@ -148,7 +144,7 @@ int main(int /*argc*/, char* /*argv*/[]) {
     ps2sdl::Ps2SdlPad pad;
 
     if (!pad.init()) { [[unlikely]]
-        std::cerr << "PS2 pad to SDL2 initialization failed: " << SDL_GetError() << "\n";
+        std::fprintf(stderr, "PS2 pad to SDL2 initialization failed: %s\n", SDL_GetError());
         SDL_DestroyTexture(tile1);
         SDL_DestroyTexture(tile2);
         SDL_DestroyTexture(tile1Inv);
