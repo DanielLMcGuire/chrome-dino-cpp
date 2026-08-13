@@ -18,7 +18,6 @@
 
 int   WINDOW_WIDTH = 640;
 int   WINDOW_HEIGHT = 480;
-int   INTERLACE_FILTER_AMT = 4;
 float MS_PER_FRAME  = 1000.0f / FPS;
 
 namespace {
@@ -79,8 +78,6 @@ void main() {
     xbox::Video video(1280, 720);
 #ifdef HD_FIDELITY_FIX
     video.interlaceFilter(0);
-#else
-    video.interlaceFilter(INTERLACE_FILTER_AMT);
 #endif
     WINDOW_WIDTH = video.getCurrentResolution().width;
     WINDOW_HEIGHT = video.getCurrentResolution().height;
