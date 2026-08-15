@@ -1,9 +1,11 @@
-#include "../xbox/hal.h"
+#include "../xbox/xbox.h"
 #include <windows.h>
 #include <cstdlib>
 
 #include <SDL.h>
 #include <SDL_image.h>
+
+#define DINO_RAND_FUNC_NAME xbox::getX86TimingSeed
 
 #include "defs.h"
 #include "game.h"
@@ -74,7 +76,7 @@ SDL_Texture* loadInvertedSpriteTexture(SDL_Renderer* renderer) {
 
 } // namespace
 
-void main() {
+int main(int /* argc */, char */*argv*/[]) {
     xbox::Video video(1280, 720);
 #ifdef HD_FIDELITY_FIX
     video.interlaceFilter(0);
@@ -82,14 +84,14 @@ void main() {
     WINDOW_WIDTH = video.getCurrentResolution().width;
     WINDOW_HEIGHT = video.getCurrentResolution().height;
     if (SDL_Init(SDL_INIT_TIMER | SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_GAMECONTROLLER) < 0) { [[unlikely]]
-        xbox::logError("SDL_Init error", SDL_GetError(), true);
-        XUnreachable();
+        xbox::logError("SDL_Init error", SDL_GetError());
+        return 1;
     }
 
     if (!(IMG_Init(IMG_INIT_PNG) & IMG_INIT_PNG)) { [[unlikely]]
         SDL_Quit();
-        xbox::logError("SDL_image init error", IMG_GetError(), true);
-        XUnreachable();
+        xbox::logError("SDL_image init error", IMG_GetError());
+        return 1;
     }
 
     SDL_Window* window = SDL_CreateWindow(
@@ -100,16 +102,16 @@ void main() {
     );
     if (!window) { [[unlikely]]
         IMG_Quit(); SDL_Quit();
-        xbox::logError("Window creation error", SDL_GetError(), true);
-        XUnreachable();
+        xbox::logError("Window creation error", SDL_GetError());
+        return 1;
     }
 
     SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, 0);
     if (!renderer) { [[unlikely]]
         SDL_DestroyWindow(window);
         IMG_Quit(); SDL_Quit();
-        xbox::logError("Renderer creation error", SDL_GetError(), true);
-        XUnreachable();
+        xbox::logError("Renderer creation error", SDL_GetError());
+        return 1;
     }
 
     SDL_RenderSetLogicalSize(renderer, GAME_WIDTH, GAME_HEIGHT);
@@ -131,8 +133,8 @@ void main() {
         SDL_DestroyRenderer(renderer);
         SDL_DestroyWindow(window);
         IMG_Quit(); SDL_Quit();
-        xbox::logError("Failed to load sprite texture", "aborting", true);
-        XUnreachable();
+        xbox::logError("Failed to load sprite texture", "aborting");
+        return 1;
     }
 
     Game game(renderer, sprite, spriteInv, GET_RAND_SEED());
@@ -168,6 +170,5 @@ void main() {
     SDL_DestroyWindow(window);
     IMG_Quit();
     SDL_Quit();
-    XReboot();
-    XUnreachable();
+    return 0;
 }

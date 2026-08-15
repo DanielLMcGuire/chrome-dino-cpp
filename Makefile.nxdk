@@ -8,6 +8,10 @@ NXDK_SDL_IMAGE_DIR ?= $(NXDK_DIR)/lib/sdl/SDL2_image
 XBOX_ASSETS_HEADER := $(CURDIR)/xbox_assets.h
 
 SRCS = \
+	$(CURDIR)/src/xbox/xbox.cpp \
+	$(CURDIR)/src/xbox/led.cpp \
+	$(CURDIR)/src/xbox/video.cpp \
+	$(CURDIR)/src/xbox/init.cpp \
 	$(CURDIR)/src/game.cpp \
 	$(CURDIR)/src/entities/obstacle.cpp \
 	$(CURDIR)/src/entities/trex.cpp \

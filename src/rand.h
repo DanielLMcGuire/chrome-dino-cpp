@@ -41,10 +41,12 @@ static std::uint32_t getTimeAddressInitSeed() {
     return seedMix(seed);
 }
 
-#if __PS2__
-    #define GET_RAND_SEED(x) x.getIOPTimingSeed(getTimeAddressInitSeed())
-#elif __XBOX__
-    #define GET_RAND_SEED() xbox::getX86TimingSeed(getTimeAddressInitSeed())
+#ifdef DINO_RAND_FUNC_NAME
+    #ifdef DINO_RAND_FUNC_USES_CLASS
+        #define GET_RAND_SEED(a) a.DINO_RAND_FUNC_NAME(getTimeAddressInitSeed())
+    #else
+        #define GET_RAND_SEED() DINO_RAND_FUNC_NAME(getTimeAddressInitSeed())
+    #endif
 #else
     #define GET_RAND_SEED() getTimeAddressInitSeed()
 #endif

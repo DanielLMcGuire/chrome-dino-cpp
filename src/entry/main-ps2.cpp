@@ -7,6 +7,9 @@
 #include <cstdio>
 #include <fstream>
 
+#define DINO_RAND_FUNC_NAME mixIOPTimingSeed
+#define DINO_RAND_FUNC_USES_CLASS
+
 #include "defs.h"
 #include "game.h"
 
