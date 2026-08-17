@@ -3,7 +3,10 @@
 [![preview](screens/video.gif)](screens/video.mp4)
 <sub>(Click for uncompressed video, do note capture **lags** a bit more than usual)</sub>
 
-There are configs for both UWP (Xbox), PS2, and win32/posix. (use -DUWP=ON to enable UWP)
+The game should support mostly everything SDL2 supports out of the box.
+
+There are special configs for UWP (Xbox One / Series), PS2, Original Xbox. (use -DUWP=ON to enable UWP)
+
 
 ## Keybinds
 
@@ -41,7 +44,7 @@ cmake --build build-ps2 -j$(nproc)
 # pcsx2 build-ps2/DINOGAME.ELF
 ```
 
-Xbox:
+Original Xbox:
 
 ```bash
 git clone --depth 1 --recurse-submodules --shallow-submodules https://github.com/XboxDev/nxdk.git
