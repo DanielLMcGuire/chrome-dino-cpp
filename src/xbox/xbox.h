@@ -17,6 +17,8 @@ extern "C" {
     #include <hal/fileio.h>
 }
 
+#define HAL_LED_H // do not load led.h
+
 #define XUnreachable() __builtin_unreachable()
 
 namespace xbox {
@@ -103,6 +105,8 @@ extern bool _hasMadeVideoClass;
 #define CHECKED_VIDEO_CLASS(func) CHECK_VIDEO_CLASS(func); else XBOX_VIDEO_M_CLASS
 #define DELETE_VIDEO_CLASS() BARE_CHECK_VIDEO_CLASS delete XBOX_VIDEO_M_CLASS
 #define CREATE_VIDEO_CLASS(x, y) BARE_CHECK_VIDEO_CLASS new xbox::Video(x, y);
+
+#define BARE_CHECK_NO_VIDEO_CREATED if (!_hasMadeVideoClass)
 
 #define XSetCustomLED(a, b, c, d) \
     xbox::LED::set({(xbox::LED::Color)a, (xbox::LED::Color)b, (xbox::LED::Color)c, (xbox::LED::Color)d})

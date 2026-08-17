@@ -23,17 +23,20 @@ void __xbx_init(void) {
         { 
             if (!XBOX_VIDEO_M_CLASS->enabled()) 
                 XBOX_VIDEO_M_CLASS->enable(true);
-        } else 
-            // cannot know we are setup for sure
-        if (!_hasVideoClass) {
+        } else BARE_CHECK_NO_VIDEO_CREATED
+        // cannot know we are setup for sure
+        {
             CREATE_VIDEO_CLASS(640, 480);
             DELETE_VIDEO_CLASS(); // only need to init, deconstruct wont deinit
             constexpr bool vEnabled = true;
             AvSendTVEncoderOption((PVOID)VIDEO_BASE, VIDEO_ENC_VIDEOENABLE, !vEnabled, nullptr);
-         }
+        } else {
+            xbox::LED::set({xbox::LED::Color::RED, xbox::LED::Color::GREEN, xbox::LED::Color::RED, xbox::LED::Color::OFF});
+            Sleep(15000);
+            XReboot();
+        }
         xbox::LED::set({xbox::LED::Color::RED, xbox::LED::Color::OFF, xbox::LED::Color::RED, xbox::LED::Color::OFF});
         Sleep(15000);
     }
-    DELETE_VIDEO_CLASS();
-    xbox::reboot(); // prevent hang by rebooting
+    XReboot(); // prevent hang
 }

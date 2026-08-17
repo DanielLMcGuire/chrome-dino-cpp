@@ -1,16 +1,16 @@
 #define XBOX_IMPL
 #include "xbox.h"
 
-static bool _hasVideoClass = false;
+static bool _hasMadeVideoClass = false;
 
 #define FORCE_VIDEO_SINGLETON() \
     do { \
-        if (_hasVideoClass) { \
+        if (_hasMadeVideoClass) { \
             xbox::logError("Cannot create second class! Pass a reference instead.", "xbox::Video", true); XUnreachable();} \
-        else _hasVideoClass = true; \
+        else _hasMadeVideoClass = true; \
     } while(0)
 
-#define SINGLETON_GONE() _hasVideoClass = false
+#define SINGLETON_GONE() _hasMadeVideoClass = false
 
 xbox::Video::Video() {
     FORCE_VIDEO_SINGLETON();
