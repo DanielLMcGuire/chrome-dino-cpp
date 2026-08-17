@@ -6,7 +6,7 @@
 
 class DistanceMeter {
 public:
-    static constexpr int   CHAR_WIDTH       = 10;
+    static constexpr int   GLYPH_WIDTH       = 10;
     static constexpr int   CHAR_HEIGHT      = 13;
     static constexpr int   DEST_WIDTH       = 11;
     static constexpr int   MAX_UNITS        = 5;
@@ -57,8 +57,8 @@ public:
     [[nodiscard]] SDL_Rect getHighScoreRect() const {
         if (highScore_.empty()) return {0, 0, 0, 0};
         static constexpr int PAD = 4;
-        int x = (x_ - maxUnits_ * 2 * CHAR_WIDTH) - PAD;
-        int w = CHAR_WIDTH * ((int)highScore_.size() + 1) + PAD;
+        int x = (x_ - maxUnits_ * 2 * GLYPH_WIDTH) - PAD;
+        int w = GLYPH_WIDTH * ((int)highScore_.size() + 1) + PAD;
         int h = CHAR_HEIGHT + PAD * 2;
         return { x, y_ - PAD, w, h };
     }
@@ -167,17 +167,17 @@ private:
 
     void drawDigit(int digitPos, int charPos, bool isHighScore, bool night) const {
         SDL_Texture* tex = night ? spriteInv_ : sprite_;
-        int srcX = SP_TEXT.x + CHAR_WIDTH * charPos;
+        int srcX = SP_TEXT.x + GLYPH_WIDTH * charPos;
         int srcY = SP_TEXT.y;
 
         int baseX = isHighScore
-                       ? x_ - maxUnits_ * 2 * CHAR_WIDTH
+                       ? x_ - maxUnits_ * 2 * GLYPH_WIDTH
                        : x_;
         int dstX = baseX + digitPos * DEST_WIDTH;
         int dstY = y_;
 
         drawSprite(renderer_, tex,
-                   srcX, srcY, CHAR_WIDTH, CHAR_HEIGHT,
+                   srcX, srcY, GLYPH_WIDTH, CHAR_HEIGHT,
                    dstX, dstY);
     }
 

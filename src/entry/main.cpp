@@ -20,7 +20,12 @@ int   WINDOW_WIDTH  = GAME_WIDTH  * 2;
 int   WINDOW_HEIGHT = GAME_HEIGHT * 2;
 float MS_PER_FRAME  = 1000.0f / FPS;
 
-int SDL_main(int /*argc*/, char* /*argv*/[]) {
+#if defined(__ANDROID__) || defined(_WIN32)
+int SDL_main(int /*argc*/, char* /*argv*/[])
+#else
+int main(int /*argc*/, char* /*argv*/[])
+#endif
+{
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_GAMECONTROLLER) < 0) {
 #ifdef _WIN32
         MessageBoxA(NULL, "SDL initialization error", "DinoGame | Error", MB_OK | MB_ICONERROR);
