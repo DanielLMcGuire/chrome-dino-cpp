@@ -180,19 +180,19 @@ include(FetchContent)
 FetchContent_Declare(
     SDL2
     GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
-    GIT_TAG release-2.30.8
+    GIT_TAG release-2.32.8
 )
 
 FetchContent_Declare(
     SDL2_image
     GIT_REPOSITORY https://github.com/libsdl-org/SDL_image.git
-    GIT_TAG release-2.8.2
+    GIT_TAG release-2.8.12
 )
 
 FetchContent_Declare(
     SDL2_mixer
     GIT_REPOSITORY https://github.com/libsdl-org/SDL_mixer.git
-    GIT_TAG release-2.8.0
+    GIT_TAG release-2.8.2
 )
 
 FetchContent_MakeAvailable(SDL2 SDL2_image SDL2_mixer)
