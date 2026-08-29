@@ -38,8 +38,9 @@ mkdir -p $PS2DEV
 curl -o ps2dev-latest.tar.gz -LC - \
   https://github.com/ps2dev/ps2dev/releases/download/latest/ps2dev-ubuntu-latest.tar.gz
 tar -xf ps2dev-latest.tar.gz --strip-components 1 -C $PS2DEV
-cmake -B build-ps2 -DCMAKE_TOOLCHAIN_FILE=$PS2SDK/ps2dev.cmake -DPS2=ON # OR -DPCSX2=ON \
-  -DCMAKE_BUILD_TYPE=Release
+cmake -B build-ps2 -DCMAKE_TOOLCHAIN_FILE=$PS2SDK/ps2dev.cmake \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DPS2=ON # OR -DPCSX2=ON
 cmake --build build-ps2 -j$(nproc)
 # pcsx2 build-ps2/DINOGAME.ELF
 ```
