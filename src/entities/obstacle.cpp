@@ -3,10 +3,10 @@
 #include "drawSprite.h"
 #include <cmath>
 
-static const ObstacleTypeDef s_cactusSmall = {
+static constexpr ObstacleTypeDef s_cactusSmall = {
     "cactusSmall",
     17, 35,
-    {105},          // yPos
+    {105}, 1,       // yPos, yPosCount
     4.0f,           // multipleSpeed
     120,            // minGap
     0.0f,           // minSpeed
@@ -15,14 +15,15 @@ static const ObstacleTypeDef s_cactusSmall = {
         { 0,  7,  5, 27},
         { 4,  0,  6, 34},
         {10,  4,  7, 14},
-    },
+    }, 3,           // collisionBoxCount
     0, 0.0f,        // numFrames, frameRate
+    SP_CACTUS_SMALL,
 };
 
-static const ObstacleTypeDef s_cactusLarge = {
+static constexpr ObstacleTypeDef s_cactusLarge = {
     "cactusLarge",
     25, 50,
-    {90},
+    {90}, 1,
     7.0f,
     120,
     0.0f,
@@ -31,14 +32,15 @@ static const ObstacleTypeDef s_cactusLarge = {
         { 0, 12,  7, 38},
         { 8,  0,  7, 49},
         {13, 10, 10, 38},
-    },
+    }, 3,
     0, 0.0f,
+    SP_CACTUS_LARGE,
 };
 
-static const ObstacleTypeDef s_pterodactyl = {
+static constexpr ObstacleTypeDef s_pterodactyl = {
     "pterodactyl",
     46, 40,
-    {100, 75, 50},  // variable height
+    {100, 75, 50}, 3,  // variable height
     999.0f,
     150,
     8.5f,
@@ -49,20 +51,15 @@ static const ObstacleTypeDef s_pterodactyl = {
         { 2, 14,  4,  3},
         { 6, 10,  4,  7},
         {10,  8,  6,  9},
-    },
+    }, 5,
     2,              // numFrames
     1000.0f / 6.0f, // frameRate
+    SP_PTERODACTYL,
 };
 
 const ObstacleTypeDef& getCactusSmallDef()   { return s_cactusSmall; }
 const ObstacleTypeDef& getCactusLargeDef()   { return s_cactusLarge; }
 const ObstacleTypeDef& getPterodactylDef()   { return s_pterodactyl; }
-
-static SpritePos spriteOrigin(const ObstacleTypeDef* t) {
-    if (t == &s_cactusSmall)   return SP_CACTUS_SMALL;
-    if (t == &s_cactusLarge)   return SP_CACTUS_LARGE;
-    return SP_PTERODACTYL;
-}
 
 Obstacle::Obstacle(SDL_Renderer* renderer,
                    SDL_Texture* sprite,
@@ -84,8 +81,7 @@ void Obstacle::init(float speed) {
     }
     width = typeConfig->width * size;
 
-    const auto& ypv = typeConfig->yPos;
-    yPos = (float)ypv[randInt(0, (int)ypv.size() - 1)];
+    yPos = (float)typeConfig->yPos[randInt(0, typeConfig->yPosCount - 1)];
 
     if (typeConfig->speedOffset > 0.0f) {
         speedOffset_ = (randFloat() > 0.5f)
@@ -93,7 +89,7 @@ void Obstacle::init(float speed) {
                           : -typeConfig->speedOffset;
     }
 
-    if (size > 1 && collisionBoxes.size() >= 3) {
+    if (size > 1 && collisionBoxCount >= 3) {
         collisionBoxes[1].w = width
                              - collisionBoxes[0].w
                              - collisionBoxes[2].w;
@@ -104,7 +100,9 @@ void Obstacle::init(float speed) {
 }
 
 void Obstacle::cloneCollisionBoxes() {
-    collisionBoxes = typeConfig->collisionBoxes;
+    collisionBoxCount = typeConfig->collisionBoxCount;
+    for (int i = 0; i < collisionBoxCount; ++i)
+        collisionBoxes[i] = typeConfig->collisionBoxes[i];
 }
 
 float Obstacle::getGap(float speed) const {
@@ -116,7 +114,7 @@ float Obstacle::getGap(float speed) const {
 
 void Obstacle::draw(bool night) const {
     SDL_Texture* tex = night ? spriteInv_ : sprite_;
-    SpritePos orig = spriteOrigin(typeConfig);
+    const SpritePos orig = typeConfig->spritePos;
     int sw = typeConfig->width;
     int sh = typeConfig->height;
 

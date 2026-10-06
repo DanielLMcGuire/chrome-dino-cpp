@@ -12,6 +12,8 @@
 #include "defs.h"
 #include "game.h"
 
+#define AUTOPLAYER
+
 #ifdef AUTOPLAYER
 #include "auto_player.h"
 #endif

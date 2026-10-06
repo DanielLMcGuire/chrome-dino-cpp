@@ -21,14 +21,13 @@
 #include <fstream>
 
 Game::Game(SDL_Renderer* renderer, SDL_Texture* sprite, SDL_Texture* spriteInv, std::uint32_t seed)
-    : renderer_(renderer), sprite_(sprite), spriteInv_(spriteInv)
+    : renderer_(renderer), sprite_(sprite), spriteInv_(spriteInv),
+      rngSeeder_(seed),
+      trex_(renderer, sprite, spriteInv),
+      horizon_(renderer, sprite, spriteInv),
+      distanceMeter_(renderer, sprite, spriteInv),
+      gameOverPanel_(renderer, sprite, spriteInv)
 {
-    std::srand(seed);
-    trex_          = std::make_unique<Trex>(renderer_, sprite_, spriteInv_);
-    horizon_       = std::make_unique<Horizon>(renderer_, sprite_, spriteInv_);
-    distanceMeter_ = std::make_unique<DistanceMeter>(renderer_, sprite_, spriteInv_);
-    gameOverPanel_ = std::make_unique<GameOverPanel>(renderer_, sprite_, spriteInv_);
-
     loadSounds();
     loadHighScore();
     lastTime_ = SDL_GetTicks();
@@ -83,7 +82,7 @@ void Game::loadHighScore() {
     if (!f) return;
     f.read(reinterpret_cast<char*>(&highestScore_), sizeof(highestScore_));
     if (f && highestScore_ > 0)
-        distanceMeter_->setHighScore(highestScore_);
+        distanceMeter_.setHighScore(highestScore_);
 
 #elif defined(__ANDROID__)
     const char* basePath =
@@ -98,22 +97,22 @@ void Game::loadHighScore() {
     }
 
     std::string path = std::string(basePath) + "/highscore.dat";
-    FILE* f = fopen(path.c_str(), "rb");
+    FILE* f = std::fopen(path.c_str(), "rb");
     if (!f) {
         return;
     }
 
-    bool ok = fread(&highestScore_, sizeof(highestScore_), 1, f) == 1;
-    fclose(f);
+    bool ok = std::fread(&highestScore_, sizeof(highestScore_), 1, f) == 1;
+    std::fclose(f);
 
     if (ok && highestScore_ > 0)
-        distanceMeter_->setHighScore(highestScore_);
+        distanceMeter_.setHighScore(highestScore_);
 #elif __PCSX2__
     std::ifstream f("DINOGAME_HS.DAT", std::ios::binary);
     if (!f) return;
     f.read(reinterpret_cast<char*>(&highestScore_), sizeof(highestScore_));
     if (f && highestScore_ > 0)
-        distanceMeter_->setHighScore(highestScore_);
+        distanceMeter_.setHighScore(highestScore_);
 #elif __PS2__
     return;
 #elif defined(__XBOX__)
@@ -123,7 +122,7 @@ void Game::loadHighScore() {
     if (!f) return;
     f.read(reinterpret_cast<char*>(&highestScore_), sizeof(highestScore_));
     if (f && highestScore_ > 0)
-        distanceMeter_->setHighScore(highestScore_);
+        distanceMeter_.setHighScore(highestScore_);
 #endif
 }
 
@@ -148,13 +147,13 @@ void Game::saveHighScore() {
     }
 
     std::string path = std::string(basePath) + "/highscore.dat";
-    FILE* f = fopen(path.c_str(), "wb");
+    FILE* f = std::fopen(path.c_str(), "wb");
     if (!f) {
         return;
     }
 
-    fwrite(&highestScore_, sizeof(highestScore_), 1, f);
-    fclose(f);
+    std::fwrite(&highestScore_, sizeof(highestScore_), 1, f);
+    std::fclose(f);
 #elif __PCSX2__
     std::ofstream f("DINOGAME_HS.DAT", std::ios::binary | std::ios::trunc);
     f.write(reinterpret_cast<const char*>(&highestScore_), sizeof(highestScore_));
@@ -195,11 +194,11 @@ void Game::pollGamepad() {
                 if (!keyJump_) {
                     keyJump_ = true;
                     if (state_ == GameState::WAITING) startGame();
-                    if (!trex_->jumping && !trex_->ducking) {
+                    if (!trex_.jumping && !trex_.ducking) {
 #ifndef __XBOX__
                         playSound(sndPress_);
 #endif
-                        trex_->startJump(currentSpeed_);
+                        trex_.startJump(currentSpeed_);
                     }
                 }
             } else if (state_ == GameState::GAME_OVER) {
@@ -208,20 +207,20 @@ void Game::pollGamepad() {
         }
         if (falling(BTN_JUMP)) {
             keyJump_ = false;
-            trex_->endJump();
+            trex_.endJump();
         }
 
         if (rising(BTN_DUCK)) {
             if (!keyDuck_ && state_ == GameState::PLAYING) {
                 keyDuck_ = true;
-                if (trex_->jumping)                          trex_->setSpeedDrop();
-                else if (!trex_->jumping && !trex_->ducking) trex_->setDuck(true);
+                if (trex_.jumping)                          trex_.setSpeedDrop();
+                else if (!trex_.jumping && !trex_.ducking) trex_.setDuck(true);
             }
         }
         if (falling(BTN_DUCK)) {
             keyDuck_         = false;
-            trex_->speedDrop = false;
-            trex_->setDuck(false);
+            trex_.speedDrop = false;
+            trex_.setDuck(false);
         }
 
         if (rising(BTN_RESTART)) {
@@ -232,12 +231,12 @@ void Game::pollGamepad() {
         if (rising(BTN_CLEAR_HISCORE) && state_ == GameState::GAME_OVER) {
             Uint32 elapsed = SDL_GetTicks() - crashTime_;
             if (elapsed >= GAMEOVER_CLEAR_TIME) {
-                if (distanceMeter_->isHighScoreFlashing()) {
+                if (distanceMeter_.isHighScoreFlashing()) {
                     highestScore_ = 0;
                     saveHighScore();
-                    distanceMeter_->resetHighScore();
+                    distanceMeter_.resetHighScore();
                 } else {
-                    distanceMeter_->startHighScoreFlashing();
+                    distanceMeter_.startHighScoreFlashing();
                 }
             }
         }
@@ -272,11 +271,11 @@ void Game::pollGamepad() {
             if (!keyJump_) {
                 keyJump_ = true;
                 if (state_ == GameState::WAITING) startGame();
-                if (!trex_->jumping && !trex_->ducking) {
+                if (!trex_.jumping && !trex_.ducking) {
 #ifndef __XBOX__
                     playSound(sndPress_);
 #endif
-                    trex_->startJump(currentSpeed_);
+                    trex_.startJump(currentSpeed_);
                 }
             }
         } else if (state_ == GameState::GAME_OVER) {
@@ -285,21 +284,21 @@ void Game::pollGamepad() {
     }
     if (falling(BTN_JUMP)) {
         keyJump_ = false;
-        trex_->endJump();
+        trex_.endJump();
     }
 
     if (rising(BTN_DUCK)) {
         if (!keyDuck_ && state_ == GameState::PLAYING) {
             keyDuck_ = true;
-            if (trex_->jumping)                          trex_->setSpeedDrop();
-            else if (!trex_->jumping && !trex_->ducking) trex_->setDuck(true);
+            if (trex_.jumping)                          trex_.setSpeedDrop();
+            else if (!trex_.jumping && !trex_.ducking) trex_.setDuck(true);
         }
     }
 
     if (falling(BTN_DUCK)) {
         keyDuck_         = false;
-        trex_->speedDrop = false;
-        trex_->setDuck(false);
+        trex_.speedDrop = false;
+        trex_.setDuck(false);
     }
     
     if (rising(BTN_RESTART)) {
@@ -310,12 +309,12 @@ void Game::pollGamepad() {
     if (rising(BTN_CLEAR_HISCORE) && state_ == GameState::GAME_OVER) {
         Uint32 elapsed = SDL_GetTicks() - crashTime_;
         if (elapsed >= GAMEOVER_CLEAR_TIME) {
-            if (distanceMeter_->isHighScoreFlashing()) {
+            if (distanceMeter_.isHighScoreFlashing()) {
                 highestScore_ = 0;
                 saveHighScore();
-                distanceMeter_->resetHighScore();
+                distanceMeter_.resetHighScore();
             } else {
-                distanceMeter_->startHighScoreFlashing();
+                distanceMeter_.startHighScoreFlashing();
             }
         }
     }
@@ -367,37 +366,37 @@ void Game::handleEvent(const SDL_Event& e) {
             if (!keyJump_) {
                 keyJump_ = true;
                 if (state_ == GameState::WAITING) startGame();
-                if (!trex_->jumping && !trex_->ducking) {
+                if (!trex_.jumping && !trex_.ducking) {
 #ifndef __XBOX__
                     playSound(sndPress_);
 #endif
-                    trex_->startJump(currentSpeed_);
+                    trex_.startJump(currentSpeed_);
                 }
             }
         }
     }
     if (e.type == SDL_MOUSEBUTTONUP && e.button.button == SDL_BUTTON_LEFT) {
         keyJump_ = false;
-        trex_->endJump();
+        trex_.endJump();
         if (state_ == GameState::GAME_OVER) {
             Uint32 elapsed = SDL_GetTicks() - crashTime_;
             if (elapsed >= GAMEOVER_CLEAR_TIME) {
                 int lx = e.button.x;
                 int ly = e.button.y;
-                SDL_Rect r = distanceMeter_->getHighScoreRect();
+                SDL_Rect r = distanceMeter_.getHighScoreRect();
                 bool onHiScore = highestScore_ > 0 &&
                                  lx >= r.x && lx < r.x + r.w &&
                                  ly >= r.y && ly < r.y + r.h;
                 if (onHiScore) {
-                    if (distanceMeter_->isHighScoreFlashing()) {
+                    if (distanceMeter_.isHighScoreFlashing()) {
                         highestScore_ = 0;
                         saveHighScore();
-                        distanceMeter_->resetHighScore();
+                        distanceMeter_.resetHighScore();
                     } else {
-                        distanceMeter_->startHighScoreFlashing();
+                        distanceMeter_.startHighScoreFlashing();
                     }
                 } else {
-                    distanceMeter_->cancelHighScoreFlashing();
+                    distanceMeter_.cancelHighScoreFlashing();
                     restart();
                 }
             }
@@ -422,11 +421,11 @@ void Game::handleEvent(const SDL_Event& e) {
                         if (state_ == GameState::WAITING) {
                             startGame();
                         }
-                        if (!trex_->jumping && !trex_->ducking) {
+                        if (!trex_.jumping && !trex_.ducking) {
 #ifndef __XBOX__
                             playSound(sndPress_);
 #endif
-                            trex_->startJump(currentSpeed_);
+                            trex_.startJump(currentSpeed_);
                         }
                     }
                 } else if (state_ == GameState::GAME_OVER) {
@@ -441,10 +440,10 @@ void Game::handleEvent(const SDL_Event& e) {
                 if (!keyDuck_) {
                     keyDuck_ = true;
                     if (state_ == GameState::PLAYING) {
-                        if (trex_->jumping) {
-                            trex_->setSpeedDrop();
-                        } else if (!trex_->jumping && !trex_->ducking) {
-                            trex_->setDuck(true);
+                        if (trex_.jumping) {
+                            trex_.setSpeedDrop();
+                        } else if (!trex_.jumping && !trex_.ducking) {
+                            trex_.setDuck(true);
                         }
                     }
                 }
@@ -466,12 +465,12 @@ void Game::handleEvent(const SDL_Event& e) {
             case SDLK_UP:
             case SDLK_SPACE:
                 keyJump_ = false;
-                trex_->endJump();
+                trex_.endJump();
                 break;
             case SDLK_DOWN:
                 keyDuck_ = false;
-                trex_->speedDrop = false;
-                trex_->setDuck(false);
+                trex_.speedDrop = false;
+                trex_.setDuck(false);
                 break;
             default: break;
         }
@@ -488,7 +487,7 @@ void Game::startGame() {
     currentSpeed_ = INITIAL_SPEED;
     inverted_ = false;
     invertTimer_ = 0.0f;
-    trex_->update(0.0f, TrexStatus::RUNNING, false);
+    trex_.update(0.0f, TrexStatus::RUNNING, false, false);  // draw=false: pre-clear (input) path
 }
 
 void Game::gameOver() {
@@ -501,12 +500,12 @@ void Game::gameOver() {
     state_     = GameState::GAME_OVER;
     crashTime_ = SDL_GetTicks();
 
-    trex_->update(0.0f, TrexStatus::CRASHED);
-    distanceMeter_->achievement = false;
+    trex_.update(0.0f, TrexStatus::CRASHED);
+    distanceMeter_.achievement = false;
 
     if (distanceRan_ > highestScore_) {
         highestScore_ = distanceRan_;
-        distanceMeter_->setHighScore(highestScore_);
+        distanceMeter_.setHighScore(highestScore_);
         saveHighScore();
     }
     
@@ -527,11 +526,11 @@ void Game::restart() {
     inverted_     = false;
     invertTimer_  = 0.0f;
 
-    trex_->reset();
-    horizon_->reset();
-    distanceMeter_->reset();
-    distanceMeter_->cancelHighScoreFlashing();
-    gameOverPanel_->reset();
+    trex_.reset();
+    horizon_.reset();
+    distanceMeter_.reset();
+    distanceMeter_.cancelHighScoreFlashing();
+    gameOverPanel_.reset();
 #ifndef __XBOX__
     playSound(sndPress_);
 #endif
@@ -572,21 +571,21 @@ void Game::handleNightMode(float deltaTime) {
 }
 
 bool Game::checkCollision() const {
-    if (horizon_->obstacles.empty()) return false;
-    const auto& obs = *horizon_->obstacles[0];
+    if (horizon_.obstacles.empty()) return false;
+    const auto& obs = horizon_.obstacles[0];
 
     CollisionBox tRexBox{};
-    if (trex_->ducking) {
+    if (trex_.ducking) {
         tRexBox = {
-            (int)trex_->xPos + 1,
-            (int)trex_->yPos + TREX_HEIGHT - TREX_HEIGHT_DUCK + 1,
+            (int)trex_.xPos + 1,
+            (int)trex_.yPos + TREX_HEIGHT - TREX_HEIGHT_DUCK + 1,
             TREX_WIDTH_DUCK - 2,
             TREX_HEIGHT_DUCK - 2
         };
     } else {
         tRexBox = {
-            (int)trex_->xPos + 1,
-            (int)trex_->yPos + 1,
+            (int)trex_.xPos + 1,
+            (int)trex_.yPos + 1,
             TREX_WIDTH - 2,
             TREX_HEIGHT - 2
         };
@@ -600,10 +599,10 @@ bool Game::checkCollision() const {
 
     if (!boxesOverlap(tRexBox, obsBox)) return false;
 
-    auto tRexBoxes = trex_->getCollisionBoxes();
+    auto tRexBoxes = trex_.getCollisionBoxes();
     for (const auto& tb : tRexBoxes) {
         CollisionBox adjT = adjustedBox(tb, tRexBox);
-        for (const auto& ob : obs.collisionBoxes) {
+        for (const auto& ob : obs.boxes()) {
             CollisionBox adjO = adjustedBox(ob, obsBox);
             if (boxesOverlap(adjT, adjO)) return true;
         }
@@ -622,21 +621,21 @@ void Game::update() {
     clearCanvas();
 
     if (state_ == GameState::WAITING) {
-        horizon_->update(0.0f, currentSpeed_, false, false, false);
-        trex_->update(deltaTime, TrexStatus(-1), false);
-        distanceMeter_->update(deltaTime, 0, false);
+        horizon_.update(0.0f, currentSpeed_, false, false, false);
+        trex_.update(deltaTime, TrexStatus(-1), false);
+        distanceMeter_.update(deltaTime, 0, false);
 
     } else if (state_ == GameState::PLAYING) {
         runningTime_ += deltaTime;
         bool hasObstacles = runningTime_ > (float)CLEAR_TIME;
 
-        if (trex_->jumping) {
-            trex_->updateJump(deltaTime);
+        if (trex_.jumping) {
+            trex_.updateJump(deltaTime);
         }
 
         bool showNight = inverted_;
-        horizon_->update(deltaTime, currentSpeed_, hasObstacles, showNight, showNight);
-        trex_->update(deltaTime, TrexStatus(-1), showNight);
+        horizon_.update(deltaTime, currentSpeed_, hasObstacles, showNight, showNight);
+        trex_.update(deltaTime, TrexStatus(-1), showNight);
 
         if (hasObstacles && checkCollision()) {
             gameOver();
@@ -646,7 +645,7 @@ void Game::update() {
                 currentSpeed_ += ACCELERATION;
             }
         }
-        bool playScore = distanceMeter_->update(deltaTime,
+        bool playScore = distanceMeter_.update(deltaTime,
                                                 (int)std::ceil(distanceRan_), showNight);
 #ifndef __XBOX__
         if (playScore) {
@@ -656,17 +655,17 @@ void Game::update() {
         handleNightMode(deltaTime);
 
     } else if (state_ == GameState::PAUSED) {
-        horizon_->update(0.0f, 0.0f, false, inverted_, inverted_);
-        horizon_->draw(inverted_);
-        trex_->update(0.0f, TrexStatus(-1), inverted_);
-        distanceMeter_->update(0.0f, (int)std::ceil(distanceRan_), inverted_);
+        horizon_.update(0.0f, 0.0f, false, inverted_, inverted_);
+        horizon_.drawObstacles(inverted_);
+        trex_.update(0.0f, TrexStatus(-1), inverted_);
+        distanceMeter_.update(0.0f, (int)std::ceil(distanceRan_), inverted_);
 
     } else if (state_ == GameState::GAME_OVER) {
-        horizon_->update(0.0f, 0.0f, false, inverted_, inverted_);
-        horizon_->draw(inverted_);
-        trex_->update(0.0f, TrexStatus(-1), inverted_);
-        distanceMeter_->update(deltaTime, (int)std::ceil(distanceRan_), inverted_);
-        gameOverPanel_->update(deltaTime, inverted_);
+        horizon_.update(0.0f, 0.0f, false, inverted_, inverted_);
+        horizon_.drawObstacles(inverted_);
+        trex_.update(0.0f, TrexStatus(-1), inverted_);
+        distanceMeter_.update(deltaTime, (int)std::ceil(distanceRan_), inverted_);
+        gameOverPanel_.update(deltaTime, inverted_);
     }
 
 #ifndef NDEBUG
@@ -678,21 +677,21 @@ void Game::update() {
 
 #ifndef NDEBUG
 void Game::drawDebugCollisions() const {
-    if (horizon_->obstacles.empty()) return;
-    const auto& obs = *horizon_->obstacles[0];
+    if (horizon_.obstacles.empty()) return;
+    const auto& obs = horizon_.obstacles[0];
 
     CollisionBox tRexBox;
-    if (trex_->ducking) {
+    if (trex_.ducking) {
         tRexBox = {
-            (int)trex_->xPos + 1,
-            (int)trex_->yPos + TREX_HEIGHT - TREX_HEIGHT_DUCK + 1,
+            (int)trex_.xPos + 1,
+            (int)trex_.yPos + TREX_HEIGHT - TREX_HEIGHT_DUCK + 1,
             TREX_WIDTH_DUCK - 2,
             TREX_HEIGHT_DUCK - 2
         };
     } else {
         tRexBox = {
-            (int)trex_->xPos + 1,
-            (int)trex_->yPos + 1,
+            (int)trex_.xPos + 1,
+            (int)trex_.yPos + 1,
             TREX_WIDTH - 2,
             TREX_HEIGHT - 2
         };
@@ -720,11 +719,11 @@ void Game::drawDebugCollisions() const {
         drawBox(tRexBox, DBG_COL_YELLOW);
         drawBox(obsBox, DBG_COL_YELLOW);
 
-        auto tRexBoxes = trex_->getCollisionBoxes();
+        auto tRexBoxes = trex_.getCollisionBoxes();
         for (const auto& tb : tRexBoxes) {
             CollisionBox adjT = adjustedBox(tb, tRexBox);
             bool collided = false;
-            for (const auto& ob : obs.collisionBoxes) {
+            for (const auto& ob : obs.boxes()) {
                 CollisionBox adjO = adjustedBox(ob, obsBox);
                 if (boxesOverlap(adjT, adjO)) {
                     collided = true;
@@ -734,7 +733,7 @@ void Game::drawDebugCollisions() const {
             drawBox(adjT, collided ? DBG_COL_RED : DBG_COL_GREEN);
         }
 
-        for (const auto& ob : obs.collisionBoxes) {
+        for (const auto& ob : obs.boxes()) {
             CollisionBox adjO = adjustedBox(ob, obsBox);
             bool collided = false;
             for (const auto& tb : tRexBoxes) {

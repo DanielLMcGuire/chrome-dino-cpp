@@ -18,7 +18,7 @@ constexpr int GAME_HEIGHT = 150;
 extern int WINDOW_WIDTH;
 extern int WINDOW_HEIGHT;
 #ifdef __PS2__
-constexpr float FPS = 59.94f;
+constexpr float FPS = 59.94f; // NTSC
 #else
 constexpr int FPS = 60;
 #endif
@@ -86,16 +86,22 @@ constexpr SpritePos SP_RESTART      = {  2, 68};
 constexpr SpritePos SP_TEXT         = {655,  2};
 constexpr SpritePos SP_HORIZON      = {  2, 52};
 
+constexpr int MAX_TYPE_YPOS  = 3;   // max entries in ObstacleTypeDef::yPos
+constexpr int MAX_TYPE_BOXES = 5;   // max entries in ObstacleTypeDef::collisionBoxes
+
 struct ObstacleTypeDef {
     const char* type;
     int   width;
     int   height;
-    std::vector<int> yPos;
+    int   yPos[MAX_TYPE_YPOS];
+    int   yPosCount;
     float multipleSpeed;
     int   minGap;
     float minSpeed;
     float speedOffset;
-    std::vector<CollisionBox> collisionBoxes;
+    CollisionBox collisionBoxes[MAX_TYPE_BOXES];
+    int   collisionBoxCount;
     int   numFrames;
     float frameRate;
+    SpritePos spritePos;
 };

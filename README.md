@@ -7,7 +7,6 @@ The game should support mostly everything SDL2 supports out of the box.
 
 There are special configs for UWP (Xbox One / Series), PS2, Original Xbox. (use -DUWP=ON to enable UWP)
 
-
 ## Keybinds
 
 |Control|Keyboard|Gamepad|

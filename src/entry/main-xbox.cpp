@@ -26,7 +26,7 @@ namespace {
 
 SDL_Texture* loadSpriteTexture(SDL_Renderer* renderer) {
     SDL_Surface* surf = IMG_Load_RW(SDL_RWFromConstMem(SPRITE_SHEET, (int)SPRITE_SHEET_len), 1);
-    if (!surf) { [[unlikely]]
+    if (!surf) [[unlikely]] {
 #ifdef _DEBUG
         xbox::LED::set({xbox::LED::Color::ORANGE, xbox::LED::Color::GREEN, xbox::LED::Color::ORANGE, xbox::LED::Color::GREEN});
 #endif
@@ -43,7 +43,7 @@ SDL_Texture* loadSpriteTexture(SDL_Renderer* renderer) {
     SDL_Texture* tex = SDL_CreateTextureFromSurface(renderer, surf);
     if (tex) {
         SDL_SetTextureBlendMode(tex, SDL_BLENDMODE_BLEND);
-    } else { [[unlikely]]
+    } else [[unlikely]] {
 #ifdef _DEBUG
         xbox::LED::set({xbox::LED::Color::ORANGE, xbox::LED::Color::RED, xbox::LED::Color::ORANGE, xbox::LED::Color::RED});
 #endif
@@ -62,10 +62,10 @@ SDL_Texture* loadSpriteTexture(SDL_Renderer* renderer) {
 
 SDL_Texture* loadInvertedSpriteTexture(SDL_Renderer* renderer) {
     SDL_Surface* surf = IMG_Load_RW(SDL_RWFromConstMem(SPRITE_SHEET, (int)SPRITE_SHEET_len), 1);
-    if (!surf) {[[unlikely]] return nullptr; }
+    if (!surf) [[unlikely]] { return nullptr; }
     SDL_Surface* inv = createInvertedSurface(surf);
     SDL_FreeSurface(surf);
-    if (!inv) { [[unlikely]] return nullptr; }
+    if (!inv) [[unlikely]] { return nullptr; }
     SDL_Texture* tex = SDL_CreateTextureFromSurface(renderer, inv);
     if (tex) {
         SDL_SetTextureBlendMode(tex, SDL_BLENDMODE_BLEND);
@@ -83,12 +83,12 @@ int main(int /* argc */, char */*argv*/[]) {
 #endif
     WINDOW_WIDTH = video.getCurrentResolution().width;
     WINDOW_HEIGHT = video.getCurrentResolution().height;
-    if (SDL_Init(SDL_INIT_TIMER | SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_GAMECONTROLLER) < 0) { [[unlikely]]
+    if (SDL_Init(SDL_INIT_TIMER | SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_GAMECONTROLLER) < 0) [[unlikely]] {
         xbox::logError("SDL_Init error", SDL_GetError());
         return 1;
     }
 
-    if (!(IMG_Init(IMG_INIT_PNG) & IMG_INIT_PNG)) { [[unlikely]]
+    if (!(IMG_Init(IMG_INIT_PNG) & IMG_INIT_PNG)) [[unlikely]] {
         SDL_Quit();
         xbox::logError("SDL_image init error", IMG_GetError());
         return 1;
@@ -100,14 +100,14 @@ int main(int /* argc */, char */*argv*/[]) {
         WINDOW_WIDTH, WINDOW_HEIGHT,
         SDL_WINDOW_SHOWN
     );
-    if (!window) { [[unlikely]]
+    if (!window) [[unlikely]] {
         IMG_Quit(); SDL_Quit();
         xbox::logError("Window creation error", SDL_GetError());
         return 1;
     }
 
     SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, 0);
-    if (!renderer) { [[unlikely]]
+    if (!renderer) [[unlikely]] {
         SDL_DestroyWindow(window);
         IMG_Quit(); SDL_Quit();
         xbox::logError("Renderer creation error", SDL_GetError());
@@ -119,7 +119,7 @@ int main(int /* argc */, char */*argv*/[]) {
     SDL_Texture* sprite    = loadSpriteTexture(renderer);
     SDL_Texture* spriteInv = loadInvertedSpriteTexture(renderer);
 
-    if (!sprite || !spriteInv) { [[unlikely]]
+    if (!sprite || !spriteInv) [[unlikely]] {
         xbox::LED::set({xbox::LED::Color::GREEN, xbox::LED::Color::RED, xbox::LED::Color::RED, xbox::LED::Color::ORANGE});
         if (sprite)    SDL_DestroyTexture(sprite);
         if (spriteInv) SDL_DestroyTexture(spriteInv);
@@ -153,7 +153,7 @@ int main(int /* argc */, char */*argv*/[]) {
 #ifdef AUTOPLAYER
             if (event.type == SDL_CONTROLLERBUTTONDOWN &&
                 event.cbutton.button == SDL_CONTROLLER_BUTTON_BACK)
-            { [[unlikely]]
+            [[unlikely]] {
                 bot.enabled = !bot.enabled;
             } else
 #endif

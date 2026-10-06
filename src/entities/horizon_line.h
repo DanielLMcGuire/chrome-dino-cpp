@@ -19,7 +19,6 @@ public:
         xPos_[1] = SEG_WIDTH;
         srcX_[0] = SRC_X0;
         srcX_[1] = SRC_X0;
-        draw(false);
     }
 
     void update(float deltaTime, float speed, bool night) {
@@ -33,7 +32,6 @@ public:
         xPos_[0] = 0;
         xPos_[1] = SEG_WIDTH;
         srcX_[0] = srcX_[1] = SRC_X0;
-        draw(false);
     }
 
     void draw(bool night) const {

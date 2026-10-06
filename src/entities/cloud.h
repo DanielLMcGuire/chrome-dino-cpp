@@ -17,13 +17,14 @@ public:
     float gap    = 0.0f;
     bool  remove = false;
 
+    Cloud() = default;
+
     Cloud(SDL_Renderer* r, SDL_Texture* t, SDL_Texture* ti)
         : renderer_(r), sprite_(t), spriteInv_(ti)
     {
         xPos = (float)GAME_WIDTH;
         yPos = (float)randInt(MIN_SKY, MAX_SKY);
         gap  = (float)randInt(MIN_GAP, MAX_GAP);
-        draw(false);
     }
 
     void update(float speed, bool night) {
@@ -40,7 +41,7 @@ public:
     }
 
 private:
-    SDL_Renderer* renderer_;
-    SDL_Texture*  sprite_;
-    SDL_Texture*  spriteInv_;
+    SDL_Renderer* renderer_  = nullptr;
+    SDL_Texture*  sprite_    = nullptr;
+    SDL_Texture*  spriteInv_ = nullptr;
 };

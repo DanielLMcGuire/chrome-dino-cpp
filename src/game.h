@@ -22,6 +22,8 @@ public:
     /// @brief Constructs the game and initializes all of its components
     Game(SDL_Renderer* renderer, SDL_Texture* sprite, SDL_Texture* spriteInv, std::uint32_t seed);
     ~Game();
+    Game(const Game&)            = delete;   // owns SDL handles / mixer chunks
+    Game& operator=(const Game&) = delete;
 
     /// @brief Handles all game events (keyboard, mouse, etc.)
     void handleEvent(const SDL_Event& e);
@@ -32,9 +34,9 @@ public:
     [[nodiscard]] bool isRunning() const { return running_; }
 
     /// @brief `trex_` getter
-    Trex*    getTrex()         { return trex_.get(); }
+    Trex*    getTrex()         { return &trex_; }
     /// @brief `horizon_` getter
-    Horizon* getHorizon()      { return horizon_.get(); }
+    Horizon* getHorizon()      { return &horizon_; }
     /// @brief `currentSpeed_` getter
     [[nodiscard]] float    getCurrentSpeed() const { return currentSpeed_; }
 
@@ -46,14 +48,18 @@ private:
     /// @brief Inverted Spritesheet
     SDL_Texture*  spriteInv_;
 
+    /// @brief Seeds the C RNG.
+    struct RngSeeder { explicit RngSeeder(std::uint32_t s) { std::srand(s); } };
+    RngSeeder rngSeeder_;
+
     /// @brief T-Rex (player)
-    std::unique_ptr<Trex>         trex_;
+    Trex          trex_;
     /// @brief Horizon (background)
-    std::unique_ptr<Horizon>      horizon_;
+    Horizon       horizon_;
     /// @brief Distance meter
-    std::unique_ptr<DistanceMeter>distanceMeter_;
+    DistanceMeter distanceMeter_;
     /// @brief Game over panel
-    std::unique_ptr<GameOverPanel>gameOverPanel_;
+    GameOverPanel gameOverPanel_;
 #ifndef __XBOX__
     /// @brief Hit (colision) sound
     Mix_Chunk* sndHit_   = nullptr;

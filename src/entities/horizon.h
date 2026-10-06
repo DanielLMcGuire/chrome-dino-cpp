@@ -6,12 +6,13 @@
 #include "obstacle.h"
 #include "colbox.h"
 #include "util.h"
-#include <vector>
-#include <memory>
+#include "static_vector.h"
 
 class Horizon {
 public:
-    std::vector<std::unique_ptr<Obstacle>> obstacles;
+    static constexpr int MAX_OBSTACLES = 8;
+
+    StaticVector<Obstacle, MAX_OBSTACLES> obstacles;
 
     Horizon(SDL_Renderer* r, SDL_Texture* t, SDL_Texture* ti)
         : renderer_(r), sprite_(t), spriteInv_(ti),
@@ -33,20 +34,24 @@ public:
     void reset() {
         obstacles.clear();
         clouds_.clear();
-        obstacleHistory_.clear();
+        historyCount_ = 0;
         horizonLine_.reset();
         nightMode_.reset();
         addCloud();
     }
 
     void removeFirstObstacle() {
-        if (!obstacles.empty()) obstacles.erase(obstacles.begin());
+        obstacles.pop_front();
     }
 
     void draw(bool night) const {
         horizonLine_.draw(night);
+        drawObstacles(night);
+    }
+
+    void drawObstacles(bool night) const {
         for (const auto& obs : obstacles)
-            obs->draw(night);
+            obs.draw(night);
     }
 
 private:
@@ -57,29 +62,28 @@ private:
     HorizonLine horizonLine_;
     NightMode   nightMode_;
 
-    std::vector<std::unique_ptr<Cloud>> clouds_;
+    StaticVector<Cloud, MAX_CLOUDS> clouds_;
     float cloudSpeed_ = BG_CLOUD_SPEED;
 
-    std::vector<const ObstacleTypeDef*> obstacleTypes_;
     static constexpr int MAX_OBSTACLE_DUPLICATION = 2;
-    std::vector<std::string> obstacleHistory_;
+
+    const ObstacleTypeDef* history_[MAX_OBSTACLE_DUPLICATION] = {};
+    int historyCount_ = 0;
 
     void addCloud() {
-        clouds_.push_back(std::make_unique<Cloud>(renderer_, sprite_, spriteInv_));
+        clouds_.push_back(Cloud(renderer_, sprite_, spriteInv_));
     }
 
     void updateClouds(float deltaTime, float speed, bool night) {
         float cloudSpeed = cloudSpeed_ / 1000.0f * deltaTime * speed;
         for (auto& c : clouds_) {
-            c->update(cloudSpeed, night);
+            c.update(cloudSpeed, night);
         }
-        clouds_.erase(std::remove_if(clouds_.begin(), clouds_.end(),
-                       [](const auto& c) { return c->remove; }),
-                      clouds_.end());
+        clouds_.remove_if([](const Cloud& c) { return c.remove; });
 
         if ((int)clouds_.size() < MAX_CLOUDS) {
             if (clouds_.empty()
-                || (GAME_WIDTH - clouds_.back()->xPos) > clouds_.back()->gap) {
+                || (GAME_WIDTH - clouds_.back().xPos) > clouds_.back().gap) {
                 if (randFloat() < CLOUD_FREQUENCY) {
                     addCloud();
                 }
@@ -89,60 +93,60 @@ private:
 
     void updateObstacleList(float deltaTime, float speed, bool night) {
         for (auto& obs : obstacles) {
-            obs->update(deltaTime, speed, night);
+            obs.update(deltaTime, speed, night);
         }
 
-        obstacles.erase(
-            std::remove_if(obstacles.begin(), obstacles.end(),
-                           [](const auto& o) { return o->remove; }),
-            obstacles.end());
+        obstacles.remove_if([](const Obstacle& o) { return o.remove; });
 
         if (obstacles.empty()) {
             addNewObstacle(speed);
         } else {
-            const auto& last = obstacles.back();
-            if (last->followingObstacleCreated) return;
+            auto& last = obstacles.back();
+            if (last.followingObstacleCreated) return;
 
             bool readyToSpawn =
-                last->xPos + (float)last->width + last->gap < GAME_WIDTH;
+                last.xPos + (float)last.width + last.gap < GAME_WIDTH;
             if (readyToSpawn) {
-                last->followingObstacleCreated = true;
+                last.followingObstacleCreated = true;
                 addNewObstacle(speed);
             }
         }
     }
 
-    [[nodiscard]] bool duplicateObstacleCheck(const std::string& type) const {
+    [[nodiscard]] bool duplicateObstacleCheck(const ObstacleTypeDef* type) const {
         int count = 0;
-        for (const auto& h : obstacleHistory_)
-            count = (h == type) ? count + 1 : 0;
+        for (int i = 0; i < historyCount_; ++i)
+            count = (history_[i] == type) ? count + 1 : 0;
         return count >= MAX_OBSTACLE_DUPLICATION;
     }
 
+    void pushHistory(const ObstacleTypeDef* type) {
+        int n = historyCount_ < MAX_OBSTACLE_DUPLICATION ? historyCount_ + 1
+                                                         : MAX_OBSTACLE_DUPLICATION;
+        for (int i = n - 1; i > 0; --i) history_[i] = history_[i - 1];
+        history_[0]   = type;
+        historyCount_ = n;
+    }
+
     void addNewObstacle(float speed) {
-        std::vector<const ObstacleTypeDef*> candidates;
+        const ObstacleTypeDef* candidates[3];
+        int numCandidates = 0;
         if (speed >= getCactusSmallDef().minSpeed)
-            candidates.push_back(&getCactusSmallDef());
+            candidates[numCandidates++] = &getCactusSmallDef();
         if (speed >= getCactusLargeDef().minSpeed)
-            candidates.push_back(&getCactusLargeDef());
+            candidates[numCandidates++] = &getCactusLargeDef();
         if (speed >= getPterodactylDef().minSpeed)
-            candidates.push_back(&getPterodactylDef());
+            candidates[numCandidates++] = &getPterodactylDef();
 
-        if (candidates.empty()) candidates.push_back(&getCactusSmallDef());
+        if (numCandidates == 0) candidates[numCandidates++] = &getCactusSmallDef();
 
-        const ObstacleTypeDef* chosen =
-            candidates[randInt(0, (int)candidates.size() - 1)];
+        const ObstacleTypeDef* chosen;
+        do {
+            chosen = candidates[randInt(0, numCandidates - 1)];
+        } while (numCandidates > 1 && duplicateObstacleCheck(chosen));
 
-        if (candidates.size() > 1 && duplicateObstacleCheck(chosen->type)) {
-            addNewObstacle(speed);
-            return;
-        }
+        pushHistory(chosen);
 
-        obstacleHistory_.insert(obstacleHistory_.begin(), chosen->type);
-        if ((int)obstacleHistory_.size() > MAX_OBSTACLE_DUPLICATION)
-            obstacleHistory_.resize(MAX_OBSTACLE_DUPLICATION);
-
-        obstacles.push_back(
-            std::make_unique<Obstacle>(renderer_, sprite_, spriteInv_, chosen, speed));
+        obstacles.push_back(Obstacle(renderer_, sprite_, spriteInv_, chosen, speed));
     }
 };

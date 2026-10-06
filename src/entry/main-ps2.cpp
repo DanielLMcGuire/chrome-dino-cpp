@@ -68,14 +68,14 @@ int main(int /*argc*/, char* /*argv*/[]) {
     init_joystick_driver(true);
     init_audio_driver();
 
-    if (SDL_Init(SDL_INIT_TIMER | SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_GAMECONTROLLER) < 0) { [[unlikely]]
+    if (SDL_Init(SDL_INIT_TIMER | SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_GAMECONTROLLER) < 0) [[unlikely]] {
         std::fprintf(stderr, "SDL_Init error: %s\n", SDL_GetError());
         deinit_audio_driver();
         deinit_joystick_driver(false);
         return 1;
     }
 
-    if (!(IMG_Init(IMG_INIT_PNG) & IMG_INIT_PNG)) { [[unlikely]]
+    if (!(IMG_Init(IMG_INIT_PNG) & IMG_INIT_PNG)) [[unlikely]] {
         std::fprintf(stderr, "SDL_image init error: %s", IMG_GetError());
         SDL_Quit();
         deinit_audio_driver();
@@ -92,7 +92,7 @@ int main(int /*argc*/, char* /*argv*/[]) {
         audsrv_set_volume(MAX_VOLUME);
     }
 
-    if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) < 0) { [[unlikely]]
+    if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) < 0) [[unlikely]] {
         std::fprintf(stderr, "Audio init error (continuing without audio): %s\n", Mix_GetError());
     } else {
         Mix_Init(MIX_INIT_MP3);
@@ -104,7 +104,7 @@ int main(int /*argc*/, char* /*argv*/[]) {
         WINDOW_WIDTH, WINDOW_HEIGHT,
         SDL_WINDOW_SHOWN
     );
-    if (!window) { [[unlikely]]
+    if (!window) [[unlikely]] {
         std::fprintf(stderr, "Window creation error: %s\n", SDL_GetError());
         Mix_CloseAudio(); Mix_Quit(); IMG_Quit(); SDL_Quit();
         deinit_audio_driver();
@@ -116,7 +116,7 @@ int main(int /*argc*/, char* /*argv*/[]) {
         window, -1,
         SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC
     );
-    if (!renderer) { [[unlikely]]
+    if (!renderer) [[unlikely]] {
         std::fprintf(stderr, "Renderer creation error: %s\n", SDL_GetError());
         SDL_DestroyWindow(window);
         Mix_CloseAudio(); Mix_Quit(); IMG_Quit(); SDL_Quit();
@@ -132,7 +132,7 @@ int main(int /*argc*/, char* /*argv*/[]) {
     SDL_Texture* tile1Inv = loadInvertedTile(renderer, SPRITE_SHEET_TILE1, SPRITE_SHEET_TILE1_len);
     SDL_Texture* tile2Inv = loadInvertedTile(renderer, SPRITE_SHEET_TILE2, SPRITE_SHEET_TILE2_len);
 
-    if (!tile1 || !tile2 || !tile1Inv || !tile2Inv) { [[unlikely]]
+    if (!tile1 || !tile2 || !tile1Inv || !tile2Inv) [[unlikely]] {
         std::fputs(stderr, "Failed to load one or more sprites, aborting...");
         SDL_DestroyRenderer(renderer); SDL_DestroyWindow(window);
         Mix_CloseAudio(); Mix_Quit(); IMG_Quit(); SDL_Quit();
@@ -146,7 +146,7 @@ int main(int /*argc*/, char* /*argv*/[]) {
 
     ps2sdl::Ps2SdlPad pad;
 
-    if (!pad.init()) { [[unlikely]]
+    if (!pad.init()) [[unlikely]] {
         std::fprintf(stderr, "PS2 pad to SDL2 initialization failed: %s\n", SDL_GetError());
         SDL_DestroyTexture(tile1);
         SDL_DestroyTexture(tile2);

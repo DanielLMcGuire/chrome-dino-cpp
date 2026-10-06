@@ -35,7 +35,7 @@ public:
             return;
         }
 
-        const Obstacle& obs = *horizon.obstacles[0];
+        const Obstacle& obs = horizon.obstacles[0];
 
         float x          = obs.xPos;
         float y          = obs.yPos;

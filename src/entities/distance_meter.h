@@ -1,7 +1,5 @@
 #pragma once
 #include "defs.h"
-#include <string>
-#include <vector>
 #include "drawSprite.h"
 
 class DistanceMeter {
@@ -24,41 +22,44 @@ public:
         : renderer_(r), sprite_(t), spriteInv_(ti)
     {
         maxUnits_ = MAX_UNITS;
-        maxScore_ = maxUnits_;
         calcX();
-        defaultString_.assign(maxUnits_, '0');
+        maxScore_ = 0;
         for (int i = 0; i < maxUnits_; ++i) {
-            maxScoreStr_ += '9';
+            maxScore_ = maxScore_ * 10 + 9;
         }
-        maxScore_ = std::stoi(maxScoreStr_);
     }
 
     void reset() {
         achievement     = false;
         flashTimer_     = 0.0f;
         flashIterations_= 0;
-        digits_.clear();
-        for (int i = 0; i < maxUnits_; ++i) digits_.push_back('0');
+        fillZeroDigits();
     }
 
     void setHighScore(float distance) {
         int d = getActualDistance(distance);
-        std::string s = std::string(maxUnits_, '0') + std::to_string(d);
-        highScore_ = "HI " + s.substr(s.size() - maxUnits_);
+        highScore_[0] = 'H';
+        highScore_[1] = 'I';
+        highScore_[2] = ' ';
+        for (int i = maxUnits_ - 1; i >= 0; --i) {
+            highScore_[3 + i] = (char)('0' + d % 10);
+            d /= 10;
+        }
+        highScoreLen_ = 3 + maxUnits_;
     }
 
     void resetHighScore() {
-        highScore_.clear();
+        highScoreLen_    = 0;
         hiFlashing_      = false;
         hiFlashTimer_    = 0.0f;
         hiFlashCount_    = 0;
     }
 
     [[nodiscard]] SDL_Rect getHighScoreRect() const {
-        if (highScore_.empty()) return {0, 0, 0, 0};
+        if (highScoreLen_ == 0) return {0, 0, 0, 0};
         static constexpr int PAD = 4;
         int x = (x_ - maxUnits_ * 2 * GLYPH_WIDTH) - PAD;
-        int w = GLYPH_WIDTH * ((int)highScore_.size() + 1) + PAD;
+        int w = GLYPH_WIDTH * (highScoreLen_ + 1) + PAD;
         int h = CHAR_HEIGHT + PAD * 2;
         return { x, y_ - PAD, w, h };
     }
@@ -80,8 +81,7 @@ public:
 
             if (d > maxScore_ && maxUnits_ == MAX_UNITS) {
                 ++maxUnits_;
-                maxScoreStr_ += '9';
-                maxScore_     = std::stoi(maxScoreStr_);
+                maxScore_     = maxScore_ * 10 + 9;
             }
 
             if (d > 0) {
@@ -91,11 +91,14 @@ public:
                     flashIterations_= 0;
                     playSound       = true;
                 }
-                std::string s = std::string(maxUnits_, '0') + std::to_string(d);
-                std::string ds = s.substr(s.size() - maxUnits_);
-                digits_.assign(ds.begin(), ds.end());
+                digitCount_ = maxUnits_;
+                int v = d;
+                for (int i = maxUnits_ - 1; i >= 0; --i) {
+                    digits_[i] = (char)('0' + v % 10);
+                    v /= 10;
+                }
             } else {
-                digits_.assign(maxUnits_, '0');
+                fillZeroDigits();
             }
         } else {
             if (flashIterations_ <= FLASH_ITERATIONS) {
@@ -114,7 +117,7 @@ public:
         }
 
         if (paint) {
-            for (int i = (int)digits_.size() - 1; i >= 0; --i) {
+            for (int i = digitCount_ - 1; i >= 0; --i) {
                 drawDigit(i, digits_[i] - '0', false, night);
             }
         }
@@ -146,10 +149,10 @@ private:
     int   y_               = 5;
     int   maxUnits_        = MAX_UNITS;
     int   maxScore_        = 0;
-    std::string maxScoreStr_;
-    std::string defaultString_;
-    std::vector<char> digits_;
-    std::string highScore_;
+    char  digits_[MAX_UNITS + 1]   = {};
+    int   digitCount_      = 0;
+    char  highScore_[3 + MAX_UNITS + 1] = {};
+    int   highScoreLen_    = 0;
     float flashTimer_      = 0.0f;
     int   flashIterations_ = 0;
     bool  hiFlashing_      = false;
@@ -157,6 +160,11 @@ private:
     int   hiFlashCount_    = 0;
     static constexpr int   HI_FLASH_ITERATIONS = 3;
     static constexpr float HI_FLASH_DURATION   = 1000.0f / 4.0f;
+
+    void fillZeroDigits() {
+        digitCount_ = maxUnits_;
+        for (int i = 0; i < maxUnits_; ++i) digits_[i] = '0';
+    }
 
     void calcX() {
         x_ = GAME_WIDTH - DEST_WIDTH * (maxUnits_ + 1);
@@ -182,10 +190,10 @@ private:
     }
 
     void drawHighScore(bool night, bool visible = true) const {
-        if (highScore_.empty() || !visible) return;
+        if (highScoreLen_ == 0 || !visible) return;
         SDL_Texture* tex = night ? spriteInv_ : sprite_;
         SDL_SetTextureAlphaMod(tex, (Uint8)(255 * 0.8f));
-        for (int i = (int)highScore_.size() - 1; i >= 0; --i) {
+        for (int i = highScoreLen_ - 1; i >= 0; --i) {
             char c = highScore_[i];
             int charPos = -1;
             if (c >= '0' && c <= '9') {

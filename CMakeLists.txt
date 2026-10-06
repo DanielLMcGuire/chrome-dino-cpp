@@ -27,6 +27,8 @@ if(PS2 OR PCSX2)
 
     target_compile_features(DinoGame PRIVATE cxx_std_20)
 
+    target_compile_options(DinoGame PRIVATE -fno-exceptions -fno-rtti)
+
     set(PS2_ASSETS_DIR "${CMAKE_BINARY_DIR}/ps2assets")
     set(PS2_ASSETS_HEADER "${PS2_ASSETS_DIR}/ps2_assets.h")
 
@@ -277,6 +279,8 @@ else()
 endif()
 
 target_compile_features(DinoGame PRIVATE cxx_std_20)
+
+target_compile_options(DinoGame PRIVATE -fno-exceptions -fno-rtti)
 
 target_include_directories(DinoGame PRIVATE src)
 

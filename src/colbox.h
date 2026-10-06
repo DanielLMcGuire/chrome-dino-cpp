@@ -2,6 +2,17 @@
 
 struct CollisionBox { int x, y, w, h; };
 
+struct BoxSpan {
+    const CollisionBox* data  = nullptr;
+    int                 count = 0;
+
+    [[nodiscard]] const CollisionBox* begin() const { return data; }
+    [[nodiscard]] const CollisionBox* end()   const { return data + count; }
+    [[nodiscard]] int  size()  const { return count; }
+    [[nodiscard]] bool empty() const { return count == 0; }
+    const CollisionBox& operator[](int i) const { return data[i]; }
+};
+
 inline CollisionBox adjustedBox(const CollisionBox& box, const CollisionBox& origin) {
     return {box.x + origin.x, box.y + origin.y, box.w, box.h};
 }

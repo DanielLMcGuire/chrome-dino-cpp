@@ -4,14 +4,14 @@
 #include "drawSprite.h"
 
 const Trex::FrameInfo Trex::ANIM_FRAMES[] = {
-    /* WAITING  */ {{  0,  44}, 1000.0f / 3.0f},
-    /* RUNNING  */ {{ 88, 132}, 1000.0f / 12.0f},
-    /* JUMPING  */ {{  0     }, 1000.0f / 60.0f},
-    /* DUCKING  */ {{264, 323}, 1000.0f / 8.0f},
-    /* CRASHED  */ {{220     }, 1000.0f / 60.0f},
+    /* WAITING  */ {{  0,  44}, 2, 1000.0f / 3.0f},
+    /* RUNNING  */ {{ 88, 132}, 2, 1000.0f / 12.0f},
+    /* JUMPING  */ {{  0,   0}, 1, 1000.0f / 60.0f},
+    /* DUCKING  */ {{264, 323}, 2, 1000.0f / 8.0f},
+    /* CRASHED  */ {{220,   0}, 1, 1000.0f / 60.0f},
 };
 
-static const std::vector<CollisionBox> COLL_RUNNING = {
+static constexpr CollisionBox COLL_RUNNING[] = {
     {22,  0, 17, 16},
     { 1, 18, 30,  9},
     {10, 35, 14,  8},
@@ -19,7 +19,7 @@ static const std::vector<CollisionBox> COLL_RUNNING = {
     { 5, 30, 21,  4},
     { 9, 34, 15,  4},
 };
-static const std::vector<CollisionBox> COLL_DUCKING = {
+static constexpr CollisionBox COLL_DUCKING[] = {
     {1, 18, 55, 25},
 };
 
@@ -28,7 +28,7 @@ Trex::Trex(SDL_Renderer* renderer, SDL_Texture* sprite, SDL_Texture* spriteInv)
 {
     setBlinkDelay();
     animStartTime_ = SDL_GetTicks();
-    update(0.0f, TrexStatus::WAITING);
+    update(0.0f, TrexStatus::WAITING, false, false);
 }
 
 void Trex::setBlinkDelay() {
@@ -61,7 +61,7 @@ void Trex::update(float deltaTime, TrexStatus newStatus, bool night, bool draw) 
         frameTimer_ += deltaTime;
         if (frameTimer_ >= fi.msPerFrame) {
             frameTimer_ = 0.0f;
-            currentFrame_ = (currentFrame_ + 1) % (int)fi.frames.size();
+            currentFrame_ = (currentFrame_ + 1) % fi.count;
         }
     }
 
@@ -115,7 +115,8 @@ void Trex::blink(Uint32 now, float deltaTime, bool night) {
 
 void Trex::startJump(float speed) {
     if (!jumping) {
-        update(0.0f, TrexStatus::JUMPING);
+        // draw=false: called from input handling, before the canvas is cleared for the frame
+        update(0.0f, TrexStatus::JUMPING, false, false);
         jumpVelocity_     = TREX_INITIAL_JUMP_VEL - (speed / 10.0f);
         jumping           = true;
         reachedMinHeight_ = false;
@@ -176,18 +177,13 @@ void Trex::reset() {
     jumpVelocity_ = 0.0f;
     jumping       = false;
     ducking       = false;
-    // draw=false: this reset() can happen mid-frame (e.g. landing from a
-    // jump, inside Trex::updateJump()), and the caller (Game::update())
-    // always performs its own full trex_->update() draw later in that
-    // same frame. Drawing here too would blit the (alpha-blended) sprite
-    // twice in one frame, which is harmless on most backends but shows
-    // up as a visible flicker on PS2. The status/frame-index state still
-    // needs to be reset here, so we keep the call, just without the draw.
     update(0.0f, TrexStatus::RUNNING, false, false);
     speedDrop     = false;
     jumpCount     = 0;
 }
 
-std::vector<CollisionBox> Trex::getCollisionBoxes() const {
-    return ducking ? COLL_DUCKING : COLL_RUNNING;
+BoxSpan Trex::getCollisionBoxes() const {
+    return ducking
+        ? BoxSpan{ COLL_DUCKING, (int)(sizeof(COLL_DUCKING) / sizeof(COLL_DUCKING[0])) }
+        : BoxSpan{ COLL_RUNNING, (int)(sizeof(COLL_RUNNING) / sizeof(COLL_RUNNING[0])) };
 }

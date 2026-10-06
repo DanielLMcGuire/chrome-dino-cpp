@@ -25,17 +25,17 @@ public:
     void startJump(float speed);
     void endJump();
     void setSpeedDrop();
-    void setDuck(bool isDucking, bool draw = true);
+    void setDuck(bool isDucking, bool draw = false);
     void reset();
 
-    [[nodiscard]] std::vector<CollisionBox> getCollisionBoxes() const;
+    [[nodiscard]] BoxSpan getCollisionBoxes() const;
 
 private:
     SDL_Renderer* renderer_;
     SDL_Texture*  sprite_;
     SDL_Texture*  spriteInv_;
 
-    struct FrameInfo { std::vector<int> frames; float msPerFrame; };
+    struct FrameInfo { int frames[2]; int count; float msPerFrame; };
     static const FrameInfo ANIM_FRAMES[];
 
     int   currentFrame_    = 0;
